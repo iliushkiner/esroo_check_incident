@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
-  <head>
+<head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <meta name="generator" content="PSPad editor, www.pspad.com">
     <title>Пришли допы</title>
@@ -11,18 +11,47 @@
     <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
     <link href="bootstrap/css/bootstrap-theme.min.css" rel="stylesheet" type="text/css"/>
     <link href="popup.css" rrel="stylesheet" rel="stylesheet" type="text/css"/>
-  </head>
-  <body>
-     <div class="content">
-      <h3>Пришли допы, необходимо возобновить.</h3>
-      <fieldset>        
-        <legend style='font-size: 11px'>Ссылки на обращения с пришедшими дополнительными заявлениями. Вы можете отметить о получение сообщения если возобновить рассмотрение обращения не удалось по ранее полученным документам для ожидания новых. </legend>
+</head>
+<body>
+<div class="content">
+    <h3>Изменился статус инцидентов, необходимо проверить.</h3>
+    <fieldset>
+        <legend style='font-size: 11px'>Ссылки на инциденты. После рассмотрения инцидента необходимо отметить его, и он
+            уйдет из списка.
+        </legend>
         <input id="refresh" type="button" value="ОБНОВИТЬ"><br><br>
-        <input id="show_all" type="checkbox" name="show_all">Отобразить все приостановленные 
+        <input id="show_all" type="checkbox" name="show_all">Отобразить отмеченные инциденты
         <legend style='font-size: 11px'></legend>
-        <div id="suspended_nums" class="content"></div>        
-      </fieldset>
-      <br>
-    </div>
-  </body>
+        <div class="row">
+            <div class="col-xs-1"><input id="check_all" type="checkbox"></div>
+            <div class="col-xs-3"><input type="text" id="find_inc" name="find_inc" style="width: 100%;"></div>
+            <div class="col-xs-2">
+                <select type="text" id="status_inc" name="find_inc" style="width: 100%;">
+                    <option value="-1">Все</option>
+                    <option value="0">Новый</option>
+                    <option value="1">Назначен</option>
+                    <option value="2">Выполняется</option>
+                    <option value="3">Ожидание</option>
+                    <option value="4">Решен</option>
+                    <option value="5">Закрыт</option>
+                    <option value="6">Отменен</option>
+                </select>
+            </div>
+            <div class="col-xs-2">
+                <select type="text" id="type_inc" name="find_inc" style="width: 100%;">
+                    <option value="all">Все</option>
+                    <option value="opened">Открытые</option>
+                    <option value="pending">В ожидании</option>
+                    <option value="mygroup_creator">Созданные группой</option>
+                </select>
+            </div>
+            <div class="col-xs-4 text-right"><input id="visited_all" type="button" value="Отметить выбранные"></div>
+            <div class="col-xs-12" id="row_count">Всего показано: 0 записей.</div>
+        </div>
+        <hr class="header">
+        <div id="incidents_num" class="content"></div>
+    </fieldset>
+    <br>
+</div>
+</body>
 </html>

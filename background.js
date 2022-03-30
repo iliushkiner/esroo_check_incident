@@ -15,9 +15,9 @@ var refreshPopaup = function(){
 
 chrome.runtime.onMessage.addListener(
   function(request, sender, sendResponse){
-    console.log("request",request);
-    console.log("sender",sender);
-    console.log("sendResponse",sendResponse);
+    // console.log("request",request);
+    // console.log("sender",sender);
+    // console.log("sendResponse",sendResponse);
     var cmd = request.cmd,
         params = request.params;
     try {
@@ -76,12 +76,13 @@ chrome.runtime.onMessage.addListener(
         }
     }
     
-    if (request.action === 'RefreshIcon'){        
-        let icon = 'normal';
-        $.each(request.suspended, function(key,suspended_num){ 
-            icon = (suspended_num.document_numbers.length>0 && !suspended_num.visited) ? 'attention' : 'normal';
-            return !(icon === 'attention');
-        });
+    if (request.action === 'RefreshIcon'){
+        let icon = request.icon;
+        //let icon = 'normal';
+        // $.each(request.suspended, function(key,suspended_num){
+        //     icon = (suspended_num.document_numbers.length>0 && !suspended_num.visited) ? 'attention' : 'normal';
+        //     return !(icon === 'attention');
+        // });
         if(icon === 'attention'){
             chrome.browserAction.setIcon({
                 path: {
