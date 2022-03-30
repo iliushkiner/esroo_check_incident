@@ -1,8 +1,8 @@
 {
-  "name": "PKURP SUSPENDED CHECK ADDITION",
+  "name": "ESROO CHECK INCIDENTS",
   "version": "1.0.0",
   "manifest_version": 2,
-  "description": "Расширение позволяющее отслеживать получение допов.",
+  "description": "Расширение позволяющее отслеживать инциденты в ЕСРОО.",
   "options_page": "options.html",
   "icons": {
     "16": "icon16.png",
@@ -19,7 +19,7 @@
   },
   
   "permissions": [
-    "http://pkurp-app-balancer-01.prod.egrn/*",
+    "http://10.128.21.4/*",
     /*"http://ppoz-service-bal-01.prod.egrn/*",*/
     "storage",
     "unlimitedStorage",
@@ -27,7 +27,7 @@
   ],
   
   "browser_action": {
-    "default_title": "PKURP SUSPENDED CHECK ADDITION",
+    "default_title": "ESROO CHECK INCIDENTS",
     "default_icon": "icon16.png",
     "default_popup": "popup.html"
   },
@@ -35,7 +35,7 @@
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
   
   "content_scripts": [{
-    "matches": ["http://pkurp-app-balancer-01.prod.egrn/*"],
+    "matches": ["http://10.128.21.4/*"],
     /*"exclude_matches": ["http://ppoz-service-bal-01.prod.egrn:9001/#/administration"],*/
     "js": [
         "jquery-3.5.1.min.js",
