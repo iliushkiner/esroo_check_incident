@@ -60,7 +60,15 @@ function refreshStatus() {
 	 * Получаем количество записей в IndexedDB с типом созданные группой.
 	 */
 	let count_mygroup_creator = 0;
+	let count_icreator=0;
 	let db0 = new exDB();
+	db0.open(indexeddb, function () {
+		db0.incidents.query("number").filter("return item.type=='icreator'").execute(function (r) {
+			console.log("INCIDENTS", r.length);
+			count_icreator = r.length;
+		});
+		// db.close();
+	});
 	db0.open(indexeddb, function () {
 		db0.incidents.query("number").filter("return item.type=='mygroup_creator'").execute(function (r) {
 			console.log("INCIDENTS", r.length);
@@ -100,10 +108,10 @@ function refreshStatus() {
 				if (jqXHR.status === 0) {
 					// alert('Not connect. Verify Network.');
 					console.log('Not connect. Verify Network.');
-				} else if (jqXHR.status == 404) {
+				} else if (jqXHR.status === 404) {
 					setLocalStorageValue('plg_psca_next_page', 1);
 					console.log('Requested page not found (404).');
-				} else if (jqXHR.status == 500) {
+				} else if (jqXHR.status === 500) {
 					console.log('Internal Server Error (500).');
 				} else if (exception === 'parsererror') {
 					// setLocalStorageValue('plg_psca_next_page', 1);
@@ -247,7 +255,7 @@ function refreshStatus() {
 			//return result //возврат при неасинхронном запуске
 		}
 
-		if (document.webkitVisibilityState == 'visible') {
+		if (document.webkitVisibilityState === 'visible') {
 			(async () => {
 				/**
 				 * Ищем назначенные инциденты:
@@ -255,7 +263,7 @@ function refreshStatus() {
 				 * В ожидании На группе
 				 * Созданные группой
 				 */
-				let next_page = 1;
+				let next_page;
 				if (!plg_psca_icreate) {
 					// Открытые На группе
 					next_page = await getLocalStorageValue('plg_psca_opened_next_page');
