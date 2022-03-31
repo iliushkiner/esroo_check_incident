@@ -53,6 +53,7 @@ function refreshStatus() {
 
 (async () => {
 	let tmptimeout = await getLocalStorageValue('plg_psca_timeout');
+	let plg_psca_icreate = await getLocalStorageValue('plg_psca_icreate');
 	timeout = (Object.values(tmptimeout).length > 0 ? parseInt(Object.values(tmptimeout)[0]) : timeout);
 	console.log("timeout:", timeout);
 	/**
@@ -199,27 +200,31 @@ function refreshStatus() {
 									if (r.length > 0) {
 										incident.id = r[0].id;
 
-										if (incident.status != r[0].status) {
-											//incident.visited = false;
+										if (incident.status !== r[0].status || incident.type !== r[0].type) {
+											if (incident.type !== r[0].type){
+												incident.visited = r[0].visited;
+											}
 											dba.table("incidents").update(incident, function (r) {
 												console.log("Изменеие записи в IndexedDB", r);
 											});
 										}
 									} else {
-										incident.visited = ((incident.status === 4 || incident.status === 5 || incident.status === 6) && sendType === "mygroup_creator");
+										incident.visited = ((incident.status === 4 || incident.status === 5 || incident.status === 6) && sendType === "mygroup_creator" || sendType === 'icreator');
 										dba.table("incidents").add(incident, function (r) {
 											console.log("Добавлена запись в IndexedDB", r);
 										});
 										if (sendType === 'mygroup_creator')
 											count_mygroup_creator++;
+										if (sendType === 'icreator')
+											count_icreator++;
 									}
 									refreshStatus();
 								});
 							});
 							/**
-							 * Запрос следующей страницы
+							 * Запись следующей страницы для следущего поиска
 							 */
-							if (data.total > parseInt(matches[1]) * pageNum && ((sendType === 'mygroup_creator' && count_mygroup_creator < data.total) || sendType !== 'mygroup_creator')) {
+							if (data.total > parseInt(matches[1]) * pageNum && (((sendType === 'mygroup_creator' && count_mygroup_creator < data.total) || sendType !== 'mygroup_creator') || ((sendType === 'icreator' && count_icreator < data.total) || sendType !== 'icreator'))) {
 								if (!onlyStarted)
 									setLocalStorageValue('plg_psca_' + sendType + '_next_page', pageNum + 1);
 								onlyStarted = false;
@@ -251,25 +256,35 @@ function refreshStatus() {
 				 * Созданные группой
 				 */
 				let next_page = 1;
-				// Открытые На группе
-				next_page = await getLocalStorageValue('plg_psca_opened_next_page');
-				next_page = (Object.values(next_page).length > 0 ? parseInt(Object.values(next_page)[0]) : 1);
-				getAjaxData("http://10.128.21.4/search/incidents?on=group&state=opened&page=" + next_page + "&perPage=100", "opened");
+				if (!plg_psca_icreate) {
+					// Открытые На группе
+					next_page = await getLocalStorageValue('plg_psca_opened_next_page');
+					next_page = (Object.values(next_page).length > 0 ? parseInt(Object.values(next_page)[0]) : 1);
+					getAjaxData("http://10.128.21.4/search/incidents?on=group&state=opened&page=" + next_page + "&perPage=100", "opened");
 
-				// В ожидании На группе
-				next_page = await getLocalStorageValue('plg_psca_pending_next_page');
-				next_page = (Object.values(next_page).length > 0 ? parseInt(Object.values(next_page)[0]) : 1);
-				getAjaxData("http://10.128.21.4/search/incidents?on=group&state=pending&page=" + next_page + "&perPage=100", "pending");
+					// В ожидании На группе
+					next_page = await getLocalStorageValue('plg_psca_pending_next_page');
+					next_page = (Object.values(next_page).length > 0 ? parseInt(Object.values(next_page)[0]) : 1);
+					getAjaxData("http://10.128.21.4/search/incidents?on=group&state=pending&page=" + next_page + "&perPage=100", "pending");
 
-				// Созданные группой
-				next_page = await getLocalStorageValue('plg_psca_mygroup_creator_next_page');
-				next_page = (Object.values(next_page).length > 0 ? parseInt(Object.values(next_page)[0]) : 1);
-				if (onlyStarted) {
-					getAjaxData("http://10.128.21.4/search/incidents?on=me&page=1&perPage=100&mygroup_creator=true", "mygroup_creator");
+					// Созданные группой
+					next_page = await getLocalStorageValue('plg_psca_mygroup_creator_next_page');
+					next_page = (Object.values(next_page).length > 0 ? parseInt(Object.values(next_page)[0]) : 1);
+					if (onlyStarted) {
+						getAjaxData("http://10.128.21.4/search/incidents?on=me&page=1&perPage=100&mygroup_creator=true", "mygroup_creator");
+					} else {
+						getAjaxData("http://10.128.21.4/search/incidents?on=me&page=" + next_page + "&perPage=100&mygroup_creator=true", "mygroup_creator");
+					}
 				} else {
-					getAjaxData("http://10.128.21.4/search/incidents?on=me&page=" + next_page + "&perPage=100&mygroup_creator=true", "mygroup_creator");
+					// Созданные мной
+					next_page = await getLocalStorageValue('plg_psca_icreator_next_page');
+					next_page = (Object.values(next_page).length > 0 ? parseInt(Object.values(next_page)[0]) : 1);
+					if (onlyStarted) {
+						getAjaxData("http://10.128.21.4/search/incidents?page=1&perPage=100&on=me&icreator=true", "icreator");
+					} else {
+						getAjaxData("http://10.128.21.4/search/incidents?page=" + next_page + "&perPage=100&on=me&icreator=true", "icreator"); // Созданные мной
+					}
 				}
-				// getAjaxData("http://10.128.21.4/search/incidents?on=group&icreator=true&page=" + next_page + "&perPage=5", "icreator"); // Созданные мной
 
 				let check_count = await getLocalStorageValue('plg_psca_inc_check_count');
 				check_count = (Object.values(check_count).length > 0 ? parseInt(Object.values(check_count)[0]) : 0);
@@ -279,7 +294,7 @@ function refreshStatus() {
 					 * Получаем информацию о инциденте
 					 */
 					//db.incidents.query("number").filter("return item.number=='"+incident.number+"' && item.status==5").execute(function(r){
-					db1.incidents.query("number").filter("return item.status!=4 && item.status!=5 && item.status!=6").execute(function (r) {
+					db1.incidents.query("number").filter("return item.status!=4 && item.status!=5 && item.status!=6" + (plg_psca_icreate ? " && item.type=='icreator'": "")).execute(function (r) {
 						console.log("INCIDENTS", r);
 						let count = 0;
 						$.each(r, function (key, incident) {
