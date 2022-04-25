@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+  <title>IndexedDB — безлимитное хранение данных / Хабр</title>
+  <style>
+    /* cyrillic-ext */
+    @font-face {
+      font-family: 'Fira Sans';
+      font-style: normal;
+      font-weight: 500;
+      font-display: swap;
+      src: url(https://fonts.gstatic.com/s/firasans/v11/va9B4kDNxMZdWfMOD5VnZKveSxf6TF0.woff2) format('woff2');
+      unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+    }
+
+    /* cyrillic */
+    @font-face {
+      font-family: 'Fira Sans';
+      font-style: normal;
+      font-weight: 500;
+      font-display: swap;
+      src: url(https://fonts.gstatic.com/s/firasans/v11/va9B4kDNxMZdWfMOD5VnZKveQhf6TF0.woff2) format('woff2');
+      unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+    }
+
+    /* latin-ext */
+    @font-face {
+      font-family: 'Fira Sans';
+      font-style: normal;
+      font-weight: 500;
+      font-display: swap;
+      src: url(https://fonts.gstatic.com/s/firasans/v11/va9B4kDNxMZdWfMOD5VnZKveSBf6TF0.woff2) format('woff2');
+      unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+    }
+
+    /* latin */
+    @font-face {
+      font-family: 'Fira Sans';
+      font-style: normal;
+      font-weight: 500;
+      font-display: swap;
+      src: url(https://fonts.gstatic.com/s/firasans/v11/va9B4kDNxMZdWfMOD5VnZKveRhf6.woff2) format('woff2');
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    }
+  </style>
+  <link rel="preload" href="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/chunk-vendors.css" as="style"><link rel="preload" href="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/chunk-vendors.js" as="script"><link rel="preload" href="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/app.css" as="style"><link rel="preload" href="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/app.js" as="script">
+  <link rel="stylesheet" href="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/chunk-vendors.css"><link rel="stylesheet" href="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/app.css">
+  <script type="text/javascript" async="" src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/js"></script><script async="" src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/tag.js"></script><script async="" src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/analytics.js"></script><script>window.i18nFetch = new Promise((res, rej) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('GET', '/js/i18n/ru-compiled.3b03adbf5ac46fc5ac3df8724bf36cc4.json');
+          xhr.responseType = 'json';
+          xhr.onload = function(e) {
+            if (this.status === 200) {
+              res({ru: xhr.response});
+            } else {
+              rej(e);
+            }
+          };
+          xhr.send();
+        });</script>
+  
+  <script data-vue-meta="ssr" type="application/ld+json" data-vmid="ldjson-schema">{"@context":"http:\/\/schema.org","@type":"Article","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/habr.com\/ru\/post\/198666\/"},"headline":"IndexedDB — безлимитное хранение данных","datePublished":"2013-10-23T16:07:35+04:00","dateModified":"2013-10-24T18:00:57+04:00","author":{"@type":"Person","name":"Andr'U Sender"},"publisher":{"@type":"Organization","name":"Habr","logo":{"@type":"ImageObject","url":"https:\/\/habrastorage.org\/webt\/a_\/lk\/9m\/a_lk9mjkccjox-zccjrpfolmkmq.png"}},"description":"Добрый день, уважаемое сообщество. Для тех, кто не в курсе, что такое IndexedDB и с чем его едят, можно почитать здесь.  А мы идем далее.   Безлимит В конторе в...","url":"https:\/\/habr.com\/ru\/post\/198666\/#post-content-body","about":["h_webdev","h_javascript","h_google_chrome","f_develop"],"image":["https:\/\/habr.com\/share\/publication\/198666\/2005473b1486f14d1c7cc277ce24a30b\/"]}</script>
+  <script src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/gpt.js" async=""></script>
+  <style>.grecaptcha-badge{visibility: hidden;}</style>
+  <meta name="habr-version" content="2.52.0">
+  
+  <meta data-vue-meta="ssr" property="fb:app_id" content="444736788986613"><meta data-vue-meta="ssr" property="fb:pages" content="472597926099084"><meta data-vue-meta="ssr" name="twitter:card" content="summary_large_image"><meta data-vue-meta="ssr" name="twitter:site" content="@habr_com"><meta data-vue-meta="ssr" property="og:site_name" content="Хабр" data-vmid="og:site_name"><meta data-vue-meta="ssr" property="og:title" content="IndexedDB — безлимитное хранение данных" data-vmid="og:title"><meta data-vue-meta="ssr" name="twitter:title" content="IndexedDB — безлимитное хранение данных" data-vmid="twitter:title"><meta data-vue-meta="ssr" name="aiturec:title" content="IndexedDB — безлимитное хранение данных" data-vmid="aiturec:title"><meta data-vue-meta="ssr" itemprop="image" content="https://habr.com/share/publication/198666/2005473b1486f14d1c7cc277ce24a30b/" data-vmid="image:itemprop"><meta data-vue-meta="ssr" property="og:image" content="https://habr.com/share/publication/198666/2005473b1486f14d1c7cc277ce24a30b/" data-vmid="og:image"><meta data-vue-meta="ssr" property="og:image:width" content="1200" data-vmid="og:image:width"><meta data-vue-meta="ssr" property="og:image:height" content="630" data-vmid="og:image:height"><meta data-vue-meta="ssr" property="aiturec:image" content="https://habr.com/share/publication/198666/2005473b1486f14d1c7cc277ce24a30b/" data-vmid="aiturec:image"><meta data-vue-meta="ssr" name="twitter:image" content="https://habr.com/share/publication/198666/2005473b1486f14d1c7cc277ce24a30b/" data-vmid="twitter:image"><meta data-vue-meta="ssr" property="vk:image" content="https://habr.com/share/publication/198666/2005473b1486f14d1c7cc277ce24a30b/" data-vmid="vk:image"><meta data-vue-meta="ssr" property="aiturec:item_id" content="198666" data-vmid="aiturec:item_id"><meta data-vue-meta="ssr" property="aiturec:datetime" content="2013-10-23T12:07:35.000Z" data-vmid="aiturec:datetime"><meta data-vue-meta="ssr" property="og:type" content="article" data-vmid="og:type"><meta data-vue-meta="ssr" property="og:locale" content="ru_RU" data-vmid="og:locale"><meta data-vue-meta="ssr" name="keywords" content="indexedDB, unlimited, безлимит, chrome extension, javascript library">
+  <link data-vue-meta="ssr" href="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/a_002.htm" rel="og:url" data-vmid="og:url"><link data-vue-meta="ssr" href="https://habr.com/ru/rss/post/198666/?fl=ru" type="application/rss+xml" title="" rel="alternate" name="rss"><link data-vue-meta="ssr" href="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/a_002.htm" rel="canonical" data-vmid="canonical"><link data-vue-meta="ssr" data-vmid="hreflang"><link data-vue-meta="ssr" image_src="image" href="https://habr.com/share/publication/198666/2005473b1486f14d1c7cc277ce24a30b/" data-vmid="image:href">
+  <meta name="apple-mobile-web-app-status-bar-style" content="#303b44">
+  <meta name="msapplication-TileColor" content="#629FBC">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="shortcut icon" type="image/png" sizes="16x16" href="https://assets.habr.com/habr-web/img/favicons/favicon-16.png">
+  <link rel="shortcut icon" type="image/png" sizes="32x32" href="https://assets.habr.com/habr-web/img/favicons/favicon-32.png">
+  <link rel="apple-touch-icon" type="image/png" sizes="76x76" href="https://assets.habr.com/habr-web/img/favicons/apple-touch-icon-76.png">
+  <link rel="apple-touch-icon" type="image/png" sizes="120x120" href="https://assets.habr.com/habr-web/img/favicons/apple-touch-icon-120.png">
+  <link rel="apple-touch-icon" type="image/png" sizes="152x152" href="https://assets.habr.com/habr-web/img/favicons/apple-touch-icon-152.png">
+  <link rel="apple-touch-icon" type="image/png" sizes="180x180" href="https://assets.habr.com/habr-web/img/favicons/apple-touch-icon-180.png">
+  <link rel="apple-touch-icon" type="image/png" sizes="256x256" href="https://assets.habr.com/habr-web/img/favicons/apple-touch-icon-256.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="https://assets.habr.com/habr-web/img/splashes/splash_1136x640.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="https://assets.habr.com/habr-web/img/splashes/splash_2436x1125.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="https://assets.habr.com/habr-web/img/splashes/splash_1792x828.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="https://assets.habr.com/habr-web/img/splashes/splash_828x1792.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="https://assets.habr.com/habr-web/img/splashes/splash_1334x750.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="https://assets.habr.com/habr-web/img/splashes/splash_1242x2668.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="https://assets.habr.com/habr-web/img/splashes/splash_2208x1242.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="https://assets.habr.com/habr-web/img/splashes/splash_1125x2436.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="https://assets.habr.com/habr-web/img/splashes/splash_1242x2208.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="https://assets.habr.com/habr-web/img/splashes/splash_2732x2048.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="https://assets.habr.com/habr-web/img/splashes/splash_2688x1242.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="https://assets.habr.com/habr-web/img/splashes/splash_2224x1668.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="https://assets.habr.com/habr-web/img/splashes/splash_750x1334.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="https://assets.habr.com/habr-web/img/splashes/splash_2048x2732.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="https://assets.habr.com/habr-web/img/splashes/splash_2388x1668.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="https://assets.habr.com/habr-web/img/splashes/splash_1668x2224.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="https://assets.habr.com/habr-web/img/splashes/splash_640x1136.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="https://assets.habr.com/habr-web/img/splashes/splash_1668x2388.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="https://assets.habr.com/habr-web/img/splashes/splash_2048x1536.png">
+  <link rel="apple-touch-startup-image" media="screen and (device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="https://assets.habr.com/habr-web/img/splashes/splash_1536x2048.png">
+  <link rel="mask-icon" color="#77a2b6" href="https://assets.habr.com/habr-web/img/favicons/apple-touch-icon-120.svg">
+  <link crossorigin="use-credentials" href="https://habr.com/manifest.webmanifest" rel="manifest">
+<script charset="utf-8" src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/chunk-2d21ab85.js"></script><script charset="utf-8" src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/hljs.js"></script><script charset="utf-8" src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/chunk-2d222042.js"></script><meta data-vue-meta="ssr" name="description" content="Добрый день, уважаемое сообщество.
+Для тех, кто не в курсе, что такое IndexedDB и с чем его едят, можно почитать здесь.
+
+А мы идем далее. 
+
+Безлимит
+В конторе в которой я работаю появилась..." data-vmid="description"><meta data-vue-meta="ssr" itemprop="description" content="Добрый день, уважаемое сообщество.
+Для тех, кто не в курсе, что такое IndexedDB и с чем его едят, можно почитать здесь.
+
+А мы идем далее. 
+
+Безлимит
+В конторе в которой я работаю появилась..." data-vmid="description:itemprop"><meta data-vue-meta="ssr" property="og:description" content="Добрый день, уважаемое сообщество.
+Для тех, кто не в курсе, что такое IndexedDB и с чем его едят, можно почитать здесь.
+
+А мы идем далее. 
+
+Безлимит
+В конторе в которой я работаю появилась..." data-vmid="og:description"><meta data-vue-meta="ssr" name="twitter:description" content="Добрый день, уважаемое сообщество.
+Для тех, кто не в курсе, что такое IndexedDB и с чем его едят, можно почитать здесь.
+
+А мы идем далее. 
+
+Безлимит
+В конторе в которой я работаю появилась..." data-vmid="twitter:description"><meta data-vue-meta="ssr" property="aiturec:description" content="Добрый день, уважаемое сообщество.
+Для тех, кто не в курсе, что такое IndexedDB и с чем его едят, можно почитать здесь.
+
+А мы идем далее. 
+
+Безлимит
+В конторе в которой я работаю появилась..." data-vmid="aiturec:description"><script data-vue-meta="ssr" onload="window['e0044d29c024'] = true" src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/a.js" data-vmid="checklogin"></script><script charset="utf-8" src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/chunk-2d21042a.js"></script><meta http-equiv="origin-trial" content="AxujKG9INjsZ8/gUq8+dTruNvk7RjZQ1oFhhgQbcTJKDnZfbzSTE81wvC2Hzaf3TW4avA76LTZEMdiedF1vIbA4AAABueyJvcmlnaW4iOiJodHRwczovL2ltYXNkay5nb29nbGVhcGlzLmNvbTo0NDMiLCJmZWF0dXJlIjoiVHJ1c3RUb2tlbnMiLCJleHBpcnkiOjE2NTI3NzQ0MDAsImlzVGhpcmRQYXJ0eSI6dHJ1ZX0="><meta http-equiv="origin-trial" content="Azuce85ORtSnWe1MZDTv68qpaW3iHyfL9YbLRy0cwcCZwVnePnOmkUJlG8HGikmOwhZU22dElCcfrfX2HhrBPAkAAAB7eyJvcmlnaW4iOiJodHRwczovL2RvdWJsZWNsaWNrLm5ldDo0NDMiLCJmZWF0dXJlIjoiVHJ1c3RUb2tlbnMiLCJleHBpcnkiOjE2NTI3NzQ0MDAsImlzU3ViZG9tYWluIjp0cnVlLCJpc1RoaXJkUGFydHkiOnRydWV9"><meta http-equiv="origin-trial" content="A16nvcdeoOAqrJcmjLRpl1I6f3McDD8EfofAYTt/P/H4/AWwB99nxiPp6kA0fXoiZav908Z8etuL16laFPUdfQsAAACBeyJvcmlnaW4iOiJodHRwczovL2dvb2dsZXRhZ3NlcnZpY2VzLmNvbTo0NDMiLCJmZWF0dXJlIjoiVHJ1c3RUb2tlbnMiLCJleHBpcnkiOjE2NTI3NzQ0MDAsImlzU3ViZG9tYWluIjp0cnVlLCJpc1RoaXJkUGFydHkiOnRydWV9"><meta http-equiv="origin-trial" content="AxBHdr0J44vFBQtZUqX9sjiqf5yWZ/OcHRcRMN3H9TH+t90V/j3ENW6C8+igBZFXMJ7G3Pr8Dd13632aLng42wgAAACBeyJvcmlnaW4iOiJodHRwczovL2dvb2dsZXN5bmRpY2F0aW9uLmNvbTo0NDMiLCJmZWF0dXJlIjoiVHJ1c3RUb2tlbnMiLCJleHBpcnkiOjE2NTI3NzQ0MDAsImlzU3ViZG9tYWluIjp0cnVlLCJpc1RoaXJkUGFydHkiOnRydWV9"><meta http-equiv="origin-trial" content="A88BWHFjcawUfKU3lIejLoryXoyjooBXLgWmGh+hNcqMK44cugvsI5YZbNarYvi3roc1fYbHA1AVbhAtuHZflgEAAAB2eyJvcmlnaW4iOiJodHRwczovL2dvb2dsZS5jb206NDQzIiwiZmVhdHVyZSI6IlRydXN0VG9rZW5zIiwiZXhwaXJ5IjoxNjUyNzc0NDAwLCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXNUaGlyZFBhcnR5Ijp0cnVlfQ=="><meta http-equiv="origin-trial" content="A8FHS1NmdCwGqD9DwOicnHHY+y27kdWfxKa0YHSGDfv0CSpDKRHTQdQmZVPDUdaFWUsxdgVxlwAd6o+dhJykPA0AAACWeyJvcmlnaW4iOiJodHRwczovL2RvdWJsZWNsaWNrLm5ldDo0NDMiLCJmZWF0dXJlIjoiQ29udmVyc2lvbk1lYXN1cmVtZW50IiwiZXhwaXJ5IjoxNjQzMTU1MTk5LCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXNUaGlyZFBhcnR5Ijp0cnVlLCJ1c2FnZSI6InN1YnNldCJ9"><meta http-equiv="origin-trial" content="A8zdXi6dr1hwXEUjQrYiyYQGlU3557y5QWDnN0Lwgj9ePt66XMEvNkVWOEOWPd7TP9sBQ25X0Q15Lr1Nn4oGFQkAAACceyJvcmlnaW4iOiJodHRwczovL2dvb2dsZXN5bmRpY2F0aW9uLmNvbTo0NDMiLCJmZWF0dXJlIjoiQ29udmVyc2lvbk1lYXN1cmVtZW50IiwiZXhwaXJ5IjoxNjQzMTU1MTk5LCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXNUaGlyZFBhcnR5Ijp0cnVlLCJ1c2FnZSI6InN1YnNldCJ9"><meta http-equiv="origin-trial" content="A4/Htern2udN9w3yJK9QgWQxQFruxOXsXL7cW60DyCl0EZFGCSme/J33Q/WzF7bBkVvhEWDlcBiUyZaim5CpFQwAAACceyJvcmlnaW4iOiJodHRwczovL2dvb2dsZXRhZ3NlcnZpY2VzLmNvbTo0NDMiLCJmZWF0dXJlIjoiQ29udmVyc2lvbk1lYXN1cmVtZW50IiwiZXhwaXJ5IjoxNjQzMTU1MTk5LCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXNUaGlyZFBhcnR5Ijp0cnVlLCJ1c2FnZSI6InN1YnNldCJ9"><script src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/pubads_impl_2021113001.js" async=""></script><link rel="preload" href="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/integrator.js" as="script"><script type="text/javascript" src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/integrator.js"></script><link rel="preload" href="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/integrator_002.js" as="script"><script type="text/javascript" src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/integrator_002.js"></script></head>
+<body>
+
+
+<div id="app" data-async-called="true"><div class="tm-layout__wrapper"><!----> <div></div> <!----> <header class="tm-header"><div class="tm-page-width"><div class="tm-header__container"><!----> <span class="tm-header__logo-wrap"><a href="https://habr.com/ru/" class="tm-header__logo tm-header__logo_ru"><svg height="16" width="16" class="tm-svg-img tm-header__icon"><title>Хабр</title> <use xlink:href="/img/habr-logo-ru.svg#logo"></use></svg></a> <span class="tm-header__beta-sign" style="display:none;">β</span></span> <div class="tm-dropdown tm-header__projects"><div class="tm-dropdown__head"><button class="tm-header__dropdown-toggle"><svg height="16" width="16" class="tm-svg-img tm-header__icon tm-header__icon_dropdown"><title>Открыть список</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#arrow-down"></use></svg></button></div> <!----></div> <a href="https://habr.com/ru/sandbox/start/" class="tm-header__become-author-btn">
+            Как стать автором
+          </a> <div class="tm-feature tm-header__feature tm-feature_variant-inline"><a href="https://effect.habr.com/s/b4K6i0J-MwP-Fh799sTTrQ.mODnHL79NT4lIOg34ukgKj7OYMSW7g5fyjKeH6qhy0ofxSEEgRaKMvhyUVh8TCchpAMLj-zPbSpEPvvUCI_Kaw" rel="noopener" target="_blank" class="tm-feature__link"><img alt="" src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/h-Y7Kombg0ioSUgJq5oWrw.png" class="tm-feature__icon" width="20" height="20">
+    Анонимный Дед Мороз
+  </a></div> <a href="https://effect.habr.com/s/_e011XFHrFzm2d1sycQ2lA.RKvJUcjdT4UV26aVPT63_4-zr2nkLLfmQoI4mCm-6BxZKmrgttrutjY5RkDk9mYPWicspKeKLAh_jrdRET47OWFovmbx4LZCKcZBKcEBO5I" target="_blank" class="tm-top-link" style="color: rgb(153, 221, 255);">
+  Мировые киты: на чём стоит платформа лояльности ПС «Мир»
+</a> <!----></div></div></header> <div class="tm-layout"><div class="tm-page-progress-bar"></div> <div data-menu-sticky="true" class="tm-base-layout__header tm-base-layout__header_is-sticky"><div class="tm-page-width"><div class="tm-base-layout__header-wrapper"><div class="tm-main-menu"><div class="tm-main-menu__section"><nav class="tm-main-menu__section-content"><!----> <a href="https://habr.com/ru/all/" class="tm-main-menu__item">
+        Все потоки
+      </a> <a href="https://habr.com/ru/flows/develop/" class="tm-main-menu__item">
+          Разработка
+        </a><a href="https://habr.com/ru/flows/admin/" class="tm-main-menu__item">
+          Администрирование
+        </a><a href="https://habr.com/ru/flows/design/" class="tm-main-menu__item">
+          Дизайн
+        </a><a href="https://habr.com/ru/flows/management/" class="tm-main-menu__item">
+          Менеджмент
+        </a><a href="https://habr.com/ru/flows/marketing/" class="tm-main-menu__item">
+          Маркетинг
+        </a><a href="https://habr.com/ru/flows/popsci/" class="tm-main-menu__item">
+          Научпоп
+        </a></nav></div></div> <div class="tm-header-user-menu tm-base-layout__user-menu"><a href="https://habr.com/ru/search/" class="tm-header-user-menu__item tm-header-user-menu__search"><svg height="24" width="24" class="tm-svg-img tm-header-user-menu__icon tm-header-user-menu__icon_search tm-header-user-menu__icon_dark"><title>Поиск</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#search"></use></svg></a> <!----> <!----> <!----> <div class="tm-header-user-menu__item tm-header-user-menu__user_desktop"><div class="tm-dropdown"><div class="tm-dropdown__head"><svg height="24" width="24" data-test-id="menu-toggle-guest" class="tm-svg-img tm-header-user-menu__icon"><title>Профиль</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#header-user"></use></svg> <!----></div> <!----></div> <!----></div> <!----></div></div></div></div> <button class="tm-scroll-top"><span title="Наверх" class="tm-svg-icon__wrapper tm-scroll-top__arrow"><svg height="16" width="16" class="tm-svg-img tm-svg-icon"><title>Наверх</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#small-arrow"></use></svg></span></button> <div class="tm-page-width"></div> <main class="tm-layout__container"><div hl="ru" data-async-called="true" class="tm-page"><div class="tm-page-width"><!----> <div class="tm-page__wrapper"><div class="tm-page__main tm-page__main_has-sidebar"><div class="pull-down"><div class="pull-down__header" style="height:0px;"><div class="pull-down__content" style="bottom:10px;"><svg height="24" width="24" class="tm-svg-img pull-down__arrow"><title>Обновить</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#pull-arrow"></use></svg></div></div> <div class="tm-article-presenter"> <div class="tm-article-presenter__body"><div class="tm-misprint-area"><div class="tm-misprint-area__wrapper"><article class="tm-article-presenter__content tm-article-presenter__content_narrow"><div class="tm-article-presenter__header"> <div class="tm-article-snippet tm-article-presenter__snippet"><div class="tm-article-snippet__meta-container"><div class="tm-article-snippet__meta"><span class="tm-user-info tm-article-snippet__author"><a href="https://habr.com/ru/users/AndruSender/" title="AndruSender" class="tm-user-info__userpic"><div class="tm-entity-image"><img alt="" src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/45504e13d338277fb7a47b1d94c915be_002.jpg" class="tm-entity-image__pic" width="24" height="24"></div></a> <span class="tm-user-info__user"><a href="https://habr.com/ru/users/AndruSender/" class="tm-user-info__username">
+      AndruSender
+    </a> </span></span> <span class="tm-article-snippet__datetime-published"><time datetime="2013-10-23T12:07:35.000Z" title="2013-10-23, 15:07">23  октября  2013 в 15:07</time></span></div> <!----></div> <h1 class="tm-article-snippet__title tm-article-snippet__title_h1" lang="ru"><span>IndexedDB — безлимитное хранение данных</span></h1> <div class="tm-article-snippet__hubs"><span class="tm-article-snippet__hubs-item"><a href="https://habr.com/ru/hub/webdev/" class="tm-article-snippet__hubs-item-link"><span>Разработка веб-сайтов</span> <span title="Профильный хаб" class="tm-article-snippet__profiled-hub">*</span></a></span><span class="tm-article-snippet__hubs-item"><a href="https://habr.com/ru/hub/javascript/" class="tm-article-snippet__hubs-item-link"><span>JavaScript</span> <span title="Профильный хаб" class="tm-article-snippet__profiled-hub">*</span></a></span><span class="tm-article-snippet__hubs-item"><a href="https://habr.com/ru/hub/google_chrome/" class="tm-article-snippet__hubs-item-link"><span>Google Chrome</span> <!----></a></span></div> <div class="tm-article-snippet__labels"><div class="tm-article-snippet__label tm-article-snippet__label_variant-sandbox"><span>
+        Из песочницы
+      </span></div></div> <!----> <!----></div></div> <!----> <div data-gallery-root="" class="tm-article-body" lang="ru"><div id="post-content-body" class="article-formatted-body article-formatted-body_version-1"><div xmlns="http://www.w3.org/1999/xhtml">Добрый день, уважаемое сообщество.<br>
+Для тех, кто не в курсе, что такое IndexedDB и с чем его едят, можно почитать <a href="http://habrahabr.ru/post/117473/">здесь</a>.<br>
+<br>
+А мы идем далее. <br>
+<br>
+<h2>Безлимит</h2><br>
+В конторе в которой я работаю появилась необходимость использования 
+индексированной локальной базы данных на стороне клиента и выбор сразу 
+пал на IndexedDB. <br>
+<br>
+Но как всегда есть одно «НО», это самое «НО» — ограничение размера БД на
+ машине пользователя в размере 5 МБ, что отнюдь нас не устраивало. Так 
+как данная технология планировалась использоваться в админке нашего 
+проекта и все юзеры использовали в качестве дефолтного браузера Google 
+Chrome, то было принято решение поиска обхода того самого ограничение 
+через расширение-прокси. Перелопатив много инфы мы пришли к выводу, что 
+ограничение на размер БД можно убрать использовав специальные флаги в 
+манифесте нашего расширения:<br>
+<a name="habracut"></a><br>
+<pre><code class="javascript hljs"><span class="hljs-string">"permissions"</span>: [
+        <span class="hljs-string">"unlimitedStorage"</span>,
+        <span class="hljs-string">"unlimited_storage"</span>
+    ],
+</code></pre><br>
+<habracut></habracut><br>
+<br>
+<h2>Отправка сообщений сайт-расширение-сайт</h2><br>
+Идем далее. С безлимитным хранением данных мы разобрались, но теперь 
+возникла необходимость работать с той самой безлимитной БД 
+непосредственно с самого сайта. Для этого использовалась отправка 
+сообщений между сайтом и расширением (расширение выступило в роли 
+прокси, между сайтом и безлимитной БД). Для этого в манифесте нашего 
+расширения добавили следующие флаги:<br>
+<br>
+<pre><code class="javascript hljs"><span class="hljs-string">"externally_connectable"</span>: {
+        <span class="hljs-string">"matches"</span>: [
+            <span class="hljs-string">"*://localhost/*"</span>,
+	<span class="hljs-string">"ЗДЕСЬ_ДОБАВЛЯЕМ_РАЗРЕШЕННЫЕ_ШАБЛОНЫ_URL "</span>
+        ]
+    }
+</code></pre><br>
+<br>
+Выяснилось что валидными считаются URL вида: *://google.com/* и 
+http://*.chromium.org/*, а, http:// * / *, * :/ / *. COM / не являются.<br>
+Больше информации о externally_connectable можете почитать <a href="http://developer.chrome.com/extensions/manifest/externally_connectable.html">здесь</a>.<br>
+<br>
+Идем далее.<br>
+<br>
+Наступил этап написания того самого «моста» между сайтом и расширением для доступа к БД.<br>
+В качестве основной библиотеки для работы с IndexedDB на стороне 
+расширения была использована db.js, с которой вы можете ознакомиться <a href="http://aaronpowell.github.io/db.js/">тут</a>.<br>
+<br>
+Чтобы не изобретать велосипед, было принято решение использовать на стороне сайта синтаксис доступа который реализован в db.js.<br>
+<br>
+<h3>Расширение</h3><br>
+И так поехали, создаем background.js, который будем прослушивать 
+входящие сообщения, и отвечать на них. Листинг кода привожу ниже:<br>
+<br>
+<pre><code class="javascript hljs"><span class="hljs-keyword">var</span> server;
+
+chrome.runtime.onMessageExternal.addListener(
+    <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">request, sender, sendResponse</span>) </span>{
+        <span class="hljs-keyword">var</span> cmd = request.cmd,
+            params = request.params;
+        <span class="hljs-keyword">try</span> {
+            <span class="hljs-keyword">switch</span> (cmd) {
+                <span class="hljs-keyword">case</span> <span class="hljs-string">"getUsageAndQuota"</span>:
+                    navigator.webkitPersistentStorage.queryUsageAndQuota(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">u,q</span>)</span>{
+                        sendResponse({<span class="hljs-string">"usage"</span>: u,<span class="hljs-string">"quota"</span>:q});
+                    });
+                    <span class="hljs-keyword">break</span>;
+                <span class="hljs-keyword">case</span> <span class="hljs-string">"open"</span>:
+                    db.open(params).done(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">s</span>) </span>{
+                        server = s;
+                        <span class="hljs-keyword">var</span> exclude = <span class="hljs-string">"add close get query remove update"</span>.split(<span class="hljs-string">" "</span>);
+                        <span class="hljs-keyword">var</span> tables = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Array</span>();
+                        <span class="hljs-keyword">for</span>(<span class="hljs-keyword">var</span> table <span class="hljs-keyword">in</span> server){
+                            <span class="hljs-keyword">if</span>(exclude.indexOf(table)==<span class="hljs-number">-1</span>){
+                                tables.push(table);
+                            }
+                        }
+                        sendResponse(tables);
+                    });
+                    <span class="hljs-keyword">break</span>;
+                <span class="hljs-keyword">case</span> <span class="hljs-string">"close"</span>:
+                    server.close();
+                    sendResponse({});
+                    <span class="hljs-keyword">break</span>;
+                <span class="hljs-keyword">case</span> <span class="hljs-string">"get"</span>:
+                    server[request.table].get(params).done(sendResponse)
+                    <span class="hljs-keyword">break</span>;
+                <span class="hljs-keyword">case</span> <span class="hljs-string">"add"</span>:
+                    server[request.table].add(params).done(sendResponse);
+                    <span class="hljs-keyword">break</span>;
+                <span class="hljs-keyword">case</span> <span class="hljs-string">"update"</span>:
+                    server[request.table].update(params).done(sendResponse);
+                    <span class="hljs-keyword">break</span>;
+                <span class="hljs-keyword">case</span> <span class="hljs-string">"remove"</span>:
+                    server[request.table].remove(params).done(sendResponse);
+                    <span class="hljs-keyword">break</span>;
+                <span class="hljs-keyword">case</span> <span class="hljs-string">"execute"</span>:
+                    <span class="hljs-keyword">var</span> tmp_server = server[request.table];
+                    <span class="hljs-keyword">var</span> query = tmp_server.query.apply(tmp_server, obj2arr(request.query));
+                    <span class="hljs-keyword">var</span> flt;
+                    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; request.filters.length; i++) {
+                        flt = request.filters[i];
+                        <span class="hljs-keyword">if</span> (flt.type == <span class="hljs-string">"filter"</span>) {
+                            flt.args = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Function</span>(<span class="hljs-string">"item"</span>, flt.args[<span class="hljs-number">0</span>]);
+                        }
+                        query = query[flt.type].apply(query, obj2arr(flt.args));
+                    }
+                    query.execute().done(sendResponse);
+                    <span class="hljs-keyword">break</span>;
+            }
+        } <span class="hljs-keyword">catch</span> (error) {
+            <span class="hljs-keyword">if</span> (error.name != <span class="hljs-string">"TypeError"</span>) {
+                sendResponse({<span class="hljs-attr">RUNTIME_ERROR</span>: error});
+            }
+        }
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+    });
+</code></pre><br>
+<br>
+Но тут нас ждал сюрприз, а именно на выполнении участка кода:<br>
+<br>
+<pre><code class="javascript hljs">flt.args = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Function</span>(<span class="hljs-string">"item"</span>, flt.args[<span class="hljs-number">0</span>]); </code></pre><br>
+<br>
+получаем исключение:<br>
+<br>
+<code>Refused to evaluate a string as JavaScript because 'unsafe-eval' 
+is not an allowed source of script in the following Content Security 
+Policy directive: "script-src 'self' chrome-extension-resource:".</code>.<br>
+<br>
+Для разрешения данной проблемы добавим в манифест еще одну строку, 
+которая разрешает выполнение пользовательского js на стороне расширения.<br>
+<br>
+<pre><code class="javascript hljs"><span class="hljs-string">"content_security_policy"</span>: <span class="hljs-string">"script-src 'self' 'unsafe-eval'; object-src 'self'"</span></code></pre><br>
+<br>
+Также пришлось реализовать вспомогательную функцию перегона объекта в массив, для передачи его в качестве аргументов функции.<br>
+<br>
+<pre><code class="javascript hljs"><span class="hljs-keyword">var</span> obj2arr = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">obj</span>) </span>{
+    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> obj == <span class="hljs-string">'object'</span>) {
+        <span class="hljs-keyword">var</span> tmp_args = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Array</span>();
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> k <span class="hljs-keyword">in</span> obj) {
+            tmp_args.push(obj[k]);
+        }
+        <span class="hljs-keyword">return</span> tmp_args;
+    } <span class="hljs-keyword">else</span> {
+        <span class="hljs-keyword">return</span> [obj];
+    }
+}
+</code></pre><br>
+<br>
+Полный листинг manifest.json<br>
+<br>
+<pre><code class="javascript hljs">{
+    <span class="hljs-string">"manifest_version"</span>: <span class="hljs-number">2</span>,
+
+    <span class="hljs-string">"name"</span>: <span class="hljs-string">"exDB"</span>,
+    <span class="hljs-string">"description"</span>: <span class="hljs-string">"This extension give proxy access to indexdb from page."</span>,
+    <span class="hljs-string">"version"</span>: <span class="hljs-string">"1.0"</span>,
+
+    <span class="hljs-string">"background"</span>: {
+        <span class="hljs-string">"page"</span>: <span class="hljs-string">"background.html"</span>
+    },
+    <span class="hljs-string">"content_security_policy"</span>: <span class="hljs-string">"script-src 'self' 'unsafe-eval'; object-src 'self'"</span>,
+    <span class="hljs-string">"externally_connectable"</span>: {
+        <span class="hljs-string">"matches"</span>: [
+            <span class="hljs-string">"*://localhost/*"</span>
+        ]
+    },
+    <span class="hljs-string">"permissions"</span>: [
+        <span class="hljs-string">"unlimitedStorage"</span>,
+        <span class="hljs-string">"unlimited_storage"</span>
+    ],
+    <span class="hljs-string">"icons"</span>: {
+        <span class="hljs-string">"16"</span>: <span class="hljs-string">"icons/icon_016.png"</span>,
+        <span class="hljs-string">"48"</span>: <span class="hljs-string">"icons/icon_048.png"</span>
+    }
+
+}
+</code></pre><br>
+<br>
+<h3>Клиент</h3><br>
+С расширением разобрались, теперь приступим к написанию клиент-библиотеки для работы с нашим прокси-расширением.<br>
+Первое, что необходимо, при отправке сообщения с клиента указать какому 
+расширению мы хотим его послать, для этого, указываем его id:<br>
+<br>
+<pre><code class="javascript hljs">chrome.runtime.sendMessage(<span class="hljs-string">"ID_РАСШИРЕНИЯ"</span>, data, callback);</code></pre><br>
+<br>
+Полный листинг клиентской библиотеки:<br>
+<br>
+<pre><code class="javascript hljs">(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">window, undefined</span>) </span>{
+    <span class="hljs-string">"use strict"</span>;
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">exDB</span>(<span class="hljs-params"></span>) </span>{
+        <span class="hljs-keyword">var</span> self = <span class="hljs-keyword">this</span>;
+        <span class="hljs-keyword">this</span>.extensionId = <span class="hljs-built_in">arguments</span>[<span class="hljs-number">0</span>] || <span class="hljs-string">"eojllnbjkomphhmpcpafaipblnembfem"</span>;
+        <span class="hljs-keyword">this</span>.filterList = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Array</span>();
+        <span class="hljs-keyword">this</span>._table;
+        <span class="hljs-keyword">this</span>._query;
+        self.sendMessage = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">sendMessage</span>(<span class="hljs-params">data, callback</span>) </span>{
+            chrome.runtime.sendMessage(self.extensionId, data, callback);
+        };
+
+        self.open = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">params, callback</span>) </span>{
+            self.sendMessage({<span class="hljs-string">"cmd"</span>: <span class="hljs-string">"open"</span>, <span class="hljs-string">"params"</span>: params}, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">r</span>)</span>{
+                <span class="hljs-keyword">var</span> tn;
+                <span class="hljs-keyword">for</span>(<span class="hljs-keyword">var</span> i=<span class="hljs-number">0</span>;i&lt; r.length;i++)
+                    tn = r[i];
+                    self.__defineGetter__(tn,<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>)</span>{
+                        self._table = tn;
+                        <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;
+                    });
+                callback();
+            });
+            <span class="hljs-keyword">return</span> self;
+        };
+
+        self.close = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">callback</span>) </span>{
+            self.sendMessage({<span class="hljs-string">"cmd"</span>: <span class="hljs-string">"close"</span>, <span class="hljs-string">"params"</span>: {}}, callback);
+            <span class="hljs-keyword">return</span> self;
+        }
+
+        self.table = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">name</span>) </span>{
+            self._table = name;
+            <span class="hljs-keyword">return</span> self;
+        };
+
+        self.query = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+            self._query = <span class="hljs-built_in">arguments</span>;
+            <span class="hljs-keyword">return</span> self;
+        };
+
+        self.execute = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">callback</span>) </span>{
+            self.sendMessage({<span class="hljs-string">"cmd"</span>: <span class="hljs-string">"execute"</span>, <span class="hljs-string">"table"</span>: self._table, <span class="hljs-string">"query"</span>: self._query, <span class="hljs-string">"filters"</span>: self.filterList}, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">result</span>) </span>{
+                <span class="hljs-keyword">if</span> (result &amp;&amp; result.RUNTIME_ERROR) {
+                    <span class="hljs-built_in">console</span>.error(result.RUNTIME_ERROR.message);
+                    result = <span class="hljs-literal">null</span>;
+                }
+                callback(result);
+            });
+            self._query = <span class="hljs-literal">null</span>;
+            self.filterList = [];
+        };
+
+        self.getUsageAndQuota = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">callback</span>)</span>{
+            self.sendMessage({<span class="hljs-string">"cmd"</span>: <span class="hljs-string">"getUsageAndQuota"</span>},callback);
+        };
+
+        <span class="hljs-string">"add update remove get"</span>.split(<span class="hljs-string">" "</span>).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">fn</span>) </span>{
+            self[fn] = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">item, callback</span>) </span>{
+                self.sendMessage({<span class="hljs-string">"cmd"</span>: fn, <span class="hljs-string">"table"</span>: self._table, <span class="hljs-string">"params"</span>: item}, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">result</span>) </span>{
+                    <span class="hljs-keyword">if</span> (result &amp;&amp; result.RUNTIME_ERROR) {
+                        <span class="hljs-built_in">console</span>.error(result.RUNTIME_ERROR.message);
+                        result = <span class="hljs-literal">null</span>;
+                    }
+                    callback(result);
+                });
+                <span class="hljs-keyword">return</span> self;
+            }
+        });
+
+        <span class="hljs-string">"all only lowerBound upperBound bound filter desc distinct keys count"</span>.split(<span class="hljs-string">" "</span>).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">fn</span>) </span>{
+            self[fn] = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+                self.filterList.push({<span class="hljs-attr">type</span>: fn, <span class="hljs-attr">args</span>: <span class="hljs-built_in">arguments</span>});
+                <span class="hljs-keyword">return</span> self;
+            }
+        });
+
+    }
+
+    <span class="hljs-built_in">window</span>.exDB = exDB;
+})(<span class="hljs-built_in">window</span>, <span class="hljs-literal">undefined</span>);
+</code></pre><br>
+<br>
+На данном этапе наш комплекс для работы с безлимитной indexDB готов. Ниже приведу примеры использования.<br>
+<br>
+<h5>Подключение</h5><br>
+<pre><code class="javascript hljs">    <span class="hljs-keyword">var</span> db = <span class="hljs-keyword">new</span> exDB();
+    db.open({
+        <span class="hljs-attr">server</span>: <span class="hljs-string">'my-app'</span>,
+        <span class="hljs-attr">version</span>: <span class="hljs-number">1</span>,
+        <span class="hljs-attr">schema</span>: {
+            <span class="hljs-attr">people</span>: {
+                <span class="hljs-attr">key</span>: { <span class="hljs-attr">keyPath</span>: <span class="hljs-string">'id'</span>, <span class="hljs-attr">autoIncrement</span>: <span class="hljs-literal">true</span> },
+                <span class="hljs-comment">// Optionally add indexes</span>
+                <span class="hljs-attr">indexes</span>: {
+                    <span class="hljs-attr">firstName</span>: { },
+                    <span class="hljs-attr">answer</span>: { <span class="hljs-attr">unique</span>: <span class="hljs-literal">true</span> }
+                }
+            }
+        }
+    }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{});
+</code></pre><br>
+<h5>Закрытие соединения</h5><br>
+<pre><code class="javascript hljs">db.close();
+</code></pre><br>
+<h5>Добавление записи</h5><br>
+<pre><code class="javascript hljs">db.table(<span class="hljs-string">"people"</span>).add({  <span class="hljs-attr">firstName</span>: <span class="hljs-string">'Aaron'</span>, <span class="hljs-attr">lastName</span>: <span class="hljs-string">'Powell'</span>, <span class="hljs-attr">answer</span>: <span class="hljs-number">142</span>},<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">r</span>)</span>{ }); </code></pre><br>
+<br>
+<h5>Обновление записи </h5><br>
+<pre><code class="javascript hljs"> db.table(<span class="hljs-string">"people"</span>).update({ <span class="hljs-attr">id</span>:<span class="hljs-number">1</span>, <span class="hljs-attr">firstName</span>: <span class="hljs-string">'Aaron'</span>, <span class="hljs-attr">lastName</span>: <span class="hljs-string">'Powell'</span>, <span class="hljs-attr">answer</span>: <span class="hljs-number">1242</span>}, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">r</span>) </span>{});</code></pre><br>
+<br>
+<h5>Удаление записи по ID</h5><br>
+<pre><code class="javascript hljs">db.table(<span class="hljs-string">"people"</span>).remove(<span class="hljs-number">1</span>,<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">key</span>)</span>{});</code></pre><br>
+<br>
+<h5>Получение записи по ID</h5><br>
+<pre><code class="javascript hljs">db.table(<span class="hljs-string">"people"</span>).get(<span class="hljs-number">1</span>,<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">r</span>)</span>{
+	<span class="hljs-built_in">console</span>.log(r);
+ });
+</code></pre><br>
+<br>
+<h5>Выборки / Сортировки</h5><br>
+<pre><code class="javascript hljs">db.people.query(<span class="hljs-string">"firstName"</span>).only(<span class="hljs-string">"Aaron2"</span>).execute(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">r</span>)</span>{
+         <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"GETTER"</span>,r);
+});
+
+db.table(<span class="hljs-string">"people"</span>).query(<span class="hljs-string">"answer"</span>).all().desc().execute(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">r</span>)</span>{
+         <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"all"</span>,r);
+ });
+db.table(<span class="hljs-string">"people"</span>).query(<span class="hljs-string">"answer"</span>).only(<span class="hljs-number">12642</span>).count().execute(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">r</span>)</span>{
+         <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"only"</span>,r);
+});
+db.table(<span class="hljs-string">"people"</span>).query(<span class="hljs-string">"answer"</span>).bound(<span class="hljs-number">20</span>,<span class="hljs-number">45</span>).execute(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">r</span>)</span>{
+         <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"bound"</span>,r);
+});
+db.table(<span class="hljs-string">"people"</span>).query(<span class="hljs-string">"answer"</span>).lowerBound(<span class="hljs-number">50</span>).keys().execute(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">r</span>)</span>{
+         <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"lowerBound"</span>,r);
+});
+db.table(<span class="hljs-string">"people"</span>).query(<span class="hljs-string">"answer"</span>).upperBound(<span class="hljs-number">43</span>).execute(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">r</span>)</span>{
+         <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"upperBound"</span>,r);
+});
+
+db.table(<span class="hljs-string">"people"</span>).query(<span class="hljs-string">"answer"</span>).filter(<span class="hljs-string">"return item.answer==42 &amp;&amp; item.firstName=='Aaron'"</span>).execute(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">r</span>)</span>{
+         <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"filter"</span>,r);
+});
+</code></pre><br>
+<h5>Получение размера БД (использовано / максимальный размер)</h5><br>
+<pre><code class="javascript hljs">db.getUsageAndQuota(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">r</span>)</span>{
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"used"</span>, r.usage); <span class="hljs-comment">//bytes</span>
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"quota"</span>, r.quota); <span class="hljs-comment">//bytes</span>
+});
+</code></pre><br>
+<br>
+<h2>Вывод</h2><br>
+На сегодняшний момент данное решение активно используется на одном из 
+наших проектов, буду благодарен за конструктивную критику и предложения.
+ Так как этом моя первая статья на хабре прошу сильно не судить.<br>
+<br>
+С исходниками Вы можете ознакомится на <a href="https://github.com/andrusender/idb.proxy">github</a>.</div></div> <!----> <!----></div> <div class="tm-article-presenter__meta"><div class="tm-separated-list tm-article-presenter__meta-list"><span class="tm-separated-list__title">Теги:</span> <ul class="tm-separated-list__list"><li class="tm-separated-list__item"><a href="https://habr.com/ru/search/?target_type=posts&amp;order=relevance&amp;q=%5BindexedDB%5D" class="tm-tags-list__link">indexedDB</a></li><li class="tm-separated-list__item"><a href="https://habr.com/ru/search/?target_type=posts&amp;order=relevance&amp;q=%5Bunlimited%5D" class="tm-tags-list__link">unlimited</a></li><li class="tm-separated-list__item"><a href="https://habr.com/ru/search/?target_type=posts&amp;order=relevance&amp;q=%5B%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%5D" class="tm-tags-list__link">безлимит</a></li><li class="tm-separated-list__item"><a href="https://habr.com/ru/search/?target_type=posts&amp;order=relevance&amp;q=%5Bchrome%20extension%5D" class="tm-tags-list__link">chrome extension</a></li><li class="tm-separated-list__item"><a href="https://habr.com/ru/search/?target_type=posts&amp;order=relevance&amp;q=%5Bjavascript%20library%5D" class="tm-tags-list__link">javascript library</a></li></ul></div> <div class="tm-separated-list tm-article-presenter__meta-list"><span class="tm-separated-list__title">Хабы:</span> <ul class="tm-separated-list__list"><li class="tm-separated-list__item"><a href="https://habr.com/ru/hub/webdev/" class="tm-hubs-list__link">
+    Разработка веб-сайтов
+  </a></li><li class="tm-separated-list__item"><a href="https://habr.com/ru/hub/javascript/" class="tm-hubs-list__link">
+    JavaScript
+  </a></li><li class="tm-separated-list__item"><a href="https://habr.com/ru/hub/google_chrome/" class="tm-hubs-list__link">
+    Google Chrome
+  </a></li></ul></div></div></article></div> <!----></div> <div class="tm-article-sticky-panel" style=""><div class="tm-data-icons tm-article-sticky-panel__icons"><div class="tm-article-rating tm-data-icons__item"><div class="tm-votes-meter tm-article-rating__votes-switcher"><svg height="24" width="24" class="tm-svg-img tm-votes-meter__icon tm-votes-meter__icon_appearance-article"><title>Всего голосов 18: ↑17 и ↓1</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-rating"></use></svg> <span title="Всего голосов 18: ↑17 и ↓1" class="tm-votes-meter__value tm-votes-meter__value_positive tm-votes-meter__value_appearance-article tm-votes-meter__value_rating">+16</span></div> <div class="v-portal" style="display:none;"></div></div> <!----> <span title="Количество просмотров" class="tm-icon-counter tm-data-icons__item"><svg height="24" width="24" class="tm-svg-img tm-icon-counter__icon"><title>Просмотры</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-views"></use></svg> <span class="tm-icon-counter__value">14K</span></span> <button title="Добавить в закладки" type="button" class="bookmarks-button tm-data-icons__item"><span title="Добавить в закладки" class="tm-svg-icon__wrapper bookmarks-button__icon"><svg height="24" width="24" class="tm-svg-img tm-svg-icon"><title>Добавить в закладки</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-favorite"></use></svg></span> <span title="Количество пользователей, добавивших публикацию в закладки" class="bookmarks-button__counter">
+    125
+  </span></button> <!----> <div title="Поделиться" class="tm-sharing tm-data-icons__item"><button type="button" class="tm-sharing__button"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="tm-sharing__icon"><path fill="currentColor" d="M13.8 13.8V18l7.2-6.6L13.8 5v3.9C5 8.9 3 18.6 3 18.6c2.5-4.4 6-4.8 10.8-4.8z"></path></svg></button> <div class="v-portal" style="display:none;"></div></div> <div class="v-portal" style="display:none;"></div></div> </div></div> <!----> <!----> <div class="tm-article-presenter__footer"><div class="tm-article-blocks"><div class="tm-editoral-subscription"><span class="tm-svg-icon__wrapper tm-editoral-subscription__close"><svg height="16" width="16" class="tm-svg-img tm-svg-icon"><title>Закрыть</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#close"></use></svg></span> <h3 class="tm-editoral-subscription__title">
+    Редакторский дайджест
+  </h3> <p class="tm-editoral-subscription__description">
+    Присылаем лучшие статьи раз&nbsp;в&nbsp;месяц
+  </p> <form method="GET" class="tm-editoral-subscription__form"><div class="tm-input-text-decorated tm-editoral-subscription__input tm-input-text-decorated_has-label-after" name="email" placeholder="Электропочта" type="email"><!----> <input name="email" placeholder="Электропочта" type="email" class="tm-input-text-decorated__input"> <div class="tm-input-text-decorated__label tm-input-text-decorated__label_after"><button type="submit" class="tm-editoral-subscription__icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class=""><path fill="currentColor" clip-rule="evenodd" d="M19.707 11.293a1 1 0 010 1.414l-5.5 5.5a1 1 0 01-1.414-1.414L16.586 13H5a1 1 0 110-2h11.586l-3.793-3.793a1 1 0 011.414-1.414l5.5 5.5z"></path></svg></button></div></div> <!----></form></div> <section class="tm-block tm-block_spacing-bottom"><!----> <div class="tm-block__body tm-block__body_variant-balanced"><div class="tm-article-author"> <div class="tm-user-card tm-article-author__user-card tm-user-card_variant-article"><div class="tm-user-card__info-container"><div class="tm-user-card__header"><div class="tm-user-card__header-data"><a href="https://habr.com/ru/users/AndruSender/" class="tm-user-card__userpic tm-user-card__userpic_size-40"><div class="tm-entity-image"><img alt="" src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/45504e13d338277fb7a47b1d94c915be.jpg" class="tm-entity-image__pic"></div></a> <div class="tm-user-card__meta"><div title=" 7 голосов " class="tm-karma tm-user-card__karma"><div class="tm-karma__votes tm-karma__votes_positive">
+    7
+  </div> <div class="tm-karma__text">
+    Карма
+  </div></div> <div title="Рейтинг пользователя" class="tm-rating tm-user-card__rating"><div class="tm-rating__header"> <div class="tm-rating__counter">0</div></div> <div class="tm-rating__text">
+    Рейтинг
+  </div></div></div></div></div> <div class="tm-user-card__info tm-user-card__info_variant-article"><div class="tm-user-card__title tm-user-card__title_variant-article"><span class="tm-user-card__name tm-user-card__name_variant-article">Andr'U Sender</span> <a href="https://habr.com/ru/users/AndruSender/" class="tm-user-card__nickname tm-user-card__nickname_variant-article">
+          @AndruSender
+        </a> <!----></div> <p class="tm-user-card__short-info tm-user-card__short-info_variant-article">Пользователь</p></div></div> <div class="tm-user-card__buttons tm-user-card__buttons_variant-article"><!----> <!----> <!----> <!----> <!----></div></div> <!----></div> <div class="v-portal" style="display:none;"></div></div> <!----></section> <div class="tm-article-blocks__comments"><div class="tm-article-page-comments"><div class="tm-article-comments-client-rendered"><div class="tm-article-comments"><div class="tm-comments-wrapper"><div class="tm-comments-wrapper__wrapper"><header class="tm-comments-wrapper__header"><h2 class="tm-comments-wrapper__title">
+        Комментарии
+        <span class="tm-comments-wrapper__comments-count">
+          5
+        </span></h2> <div class="tm-comments-wrapper__header-aside"><!----> <button class="tm-rss-button tm-rss-button_comments-header"><span class="tm-svg-icon__wrapper tm-rss-button__icon"><svg height="16" width="16" class="tm-svg-img tm-svg-icon"><title>Скопировать ссылку на RSS</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#rss"></use></svg></span></button> <!----></div></header> <div class="tm-comments-wrapper__inner"> <div class="tm-comments__tree"><section class="tm-comment-thread"><!----> <article class="tm-comment-thread__comment"><a name="comment_6892192" class="tm-comment-thread__target"></a> <button class="tm-comment-thread__breadcrumbs tm-comment-thread__indent_b_l-0"><div class="tm-comment-thread__circle"></div></button> <!----> <div data-comment-body="6892192" class="tm-comment-thread__indent_l-0"><div data-gallery-root="" class="tm-comment"><header data-comment-header="" tabindex="-1" class="tm-comment__header"><div class="tm-comment__header-inner"><span class="tm-user-info tm-comment__user-info"><a href="https://habr.com/ru/users/oe24/" class="tm-user-info__userpic" title="oe24"><div class="tm-entity-image"><img alt="" src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/76b184ae4973f0ee8f30de2381ef2ed9.jpg" class="tm-entity-image__pic" width="24" height="24"></div></a> <span class="tm-user-info__user"><a href="https://habr.com/ru/users/oe24/" class="tm-user-info__username">
+      oe24
+    </a> <a href="#comment_6892192" class="tm-comment-thread__comment-link">
+                23.10.2013 в 16:19
+                <!----></a></span></span></div> <div class="tm-comment__buttons"><!----> <!----></div></header> <div class="tm-comment__body-content"><div xmlns="http://www.w3.org/1999/xhtml">Интересно, насколько нужно раздуть БД, чтобы Chrome еле-еле продолжал работать? Вы не экспериментировали?</div></div> <!----> <!----></div> <div class="tm-comment-footer"><div class="tm-votes-meter tm-comment-footer__votes-meter"><svg height="24" width="24" class="tm-svg-img tm-votes-meter__icon tm-votes-meter__icon_appearance-comment"><title>Комментарий пока не оценивали</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-rating"></use></svg> <span title="Комментарий пока не оценивали" class="tm-votes-meter__value tm-votes-meter__value_appearance-comment tm-votes-meter__value_rating">0</span></div> <button type="button" class="tm-comment-thread__button">
+                  Ответить
+                </button> <button title="Добавить в закладки" type="button" class="bookmarks-button tm-comment-footer__button tm-comment-footer__button_with-icon"><span title="Добавить в закладки" class="tm-svg-icon__wrapper bookmarks-button__icon"><svg height="24" width="24" class="tm-svg-img tm-svg-icon"><title>Добавить в закладки</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-favorite"></use></svg></span> <!----></button> <button data-comment-popup="6892192" class="tm-comment__button tm-comment__button_with-icon"><svg height="16" width="16" class="tm-svg-img tm-comment__icon tm-comment__icon_dots"><title>Ещё</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#dots"></use></svg></button> <!----></div></div></article> <div class="tm-comment-thread__children"><section class="tm-comment-thread"><!----> <article class="tm-comment-thread__comment"><a name="comment_6892212" class="tm-comment-thread__target"></a> <button class="tm-comment-thread__breadcrumbs tm-comment-thread__indent_b_l-1"><div class="tm-comment-thread__circle"></div></button> <!----> <div data-comment-body="6892212" class="tm-comment-thread__indent_l-1"><div data-gallery-root="" class="tm-comment"><header data-comment-header="" tabindex="-1" class="tm-comment__header tm-comment__header_is-by-op"><div class="tm-comment__header-inner"><span class="tm-user-info tm-comment__user-info"><a href="https://habr.com/ru/users/AndruSender/" class="tm-user-info__userpic" title="AndruSender"><div class="tm-entity-image"><img alt="" src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/45504e13d338277fb7a47b1d94c915be_002.jpg" class="tm-entity-image__pic" width="24" height="24"></div></a> <span class="tm-user-info__user"><a href="https://habr.com/ru/users/AndruSender/" class="tm-user-info__username">
+      AndruSender
+    </a> <a href="#comment_6892212" class="tm-comment-thread__comment-link">
+                23.10.2013 в 16:23
+                <!----></a></span></span></div> <div class="tm-comment__buttons"><button type="button" class="tm-comment__button tm-comment__button_with-icon"><svg height="16" width="16" class="tm-svg-img tm-comment__icon"><title>Показать предыдущий комментарий</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#small-arrow"></use></svg></button> <!----></div></header> <div class="tm-comment__body-content"><div xmlns="http://www.w3.org/1999/xhtml">к сожалению нет, но обязательно проведем тест на днях! и выложим отчет</div></div> <!----> <!----></div> <div class="tm-comment-footer"><div class="tm-votes-meter tm-comment-footer__votes-meter"><svg height="24" width="24" class="tm-svg-img tm-votes-meter__icon tm-votes-meter__icon_appearance-comment"><title>Всего голосов 5: ↑5 и ↓0</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-rating"></use></svg> <span title="Всего голосов 5: ↑5 и ↓0" class="tm-votes-meter__value tm-votes-meter__value_positive tm-votes-meter__value_appearance-comment tm-votes-meter__value_rating">+5</span></div> <button type="button" class="tm-comment-thread__button">
+                  Ответить
+                </button> <button title="Добавить в закладки" type="button" class="bookmarks-button tm-comment-footer__button tm-comment-footer__button_with-icon"><span title="Добавить в закладки" class="tm-svg-icon__wrapper bookmarks-button__icon"><svg height="24" width="24" class="tm-svg-img tm-svg-icon"><title>Добавить в закладки</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-favorite"></use></svg></span> <!----></button> <button data-comment-popup="6892212" class="tm-comment__button tm-comment__button_with-icon"><svg height="16" width="16" class="tm-svg-img tm-comment__icon tm-comment__icon_dots"><title>Ещё</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#dots"></use></svg></button> <!----></div></div></article> <!----> <!----></section></div> <!----></section><section class="tm-comment-thread"><!----> <article class="tm-comment-thread__comment"><a name="comment_6893428" class="tm-comment-thread__target"></a> <button class="tm-comment-thread__breadcrumbs tm-comment-thread__indent_b_l-0"><div class="tm-comment-thread__circle"></div></button> <!----> <div data-comment-body="6893428" class="tm-comment-thread__indent_l-0"><div data-gallery-root="" class="tm-comment"><header data-comment-header="" tabindex="-1" class="tm-comment__header"><div class="tm-comment__header-inner"><span class="tm-user-info tm-comment__user-info"><a href="https://habr.com/ru/users/Toy/" class="tm-user-info__userpic" title="Toy"><div class="tm-entity-image"><img alt="" src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/2fc8e23053e9051bc7a06b3176d4be8d.png" class="tm-entity-image__pic" width="24" height="24"></div></a> <span class="tm-user-info__user"><a href="https://habr.com/ru/users/Toy/" class="tm-user-info__username">
+      Toy
+    </a> <a href="#comment_6893428" class="tm-comment-thread__comment-link">
+                23.10.2013 в 20:38
+                <!----></a></span></span></div> <div class="tm-comment__buttons"><!----> <!----></div></header> <div class="tm-comment__body-content"><div xmlns="http://www.w3.org/1999/xhtml">Mega, кстати, загружает файлы в IndexedDB, а уже оттуда отдаёт пользователю.</div></div> <!----> <!----></div> <div class="tm-comment-footer"><div class="tm-votes-meter tm-comment-footer__votes-meter"><svg height="24" width="24" class="tm-svg-img tm-votes-meter__icon tm-votes-meter__icon_appearance-comment"><title>Комментарий пока не оценивали</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-rating"></use></svg> <span title="Комментарий пока не оценивали" class="tm-votes-meter__value tm-votes-meter__value_appearance-comment tm-votes-meter__value_rating">0</span></div> <button type="button" class="tm-comment-thread__button">
+                  Ответить
+                </button> <button title="Добавить в закладки" type="button" class="bookmarks-button tm-comment-footer__button tm-comment-footer__button_with-icon"><span title="Добавить в закладки" class="tm-svg-icon__wrapper bookmarks-button__icon"><svg height="24" width="24" class="tm-svg-img tm-svg-icon"><title>Добавить в закладки</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-favorite"></use></svg></span> <!----></button> <button data-comment-popup="6893428" class="tm-comment__button tm-comment__button_with-icon"><svg height="16" width="16" class="tm-svg-img tm-comment__icon tm-comment__icon_dots"><title>Ещё</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#dots"></use></svg></button> <!----></div></div></article> <!----> <!----></section><section class="tm-comment-thread"><!----> <article class="tm-comment-thread__comment"><a name="comment_6900352" class="tm-comment-thread__target"></a> <button class="tm-comment-thread__breadcrumbs tm-comment-thread__indent_b_l-0"><div class="tm-comment-thread__circle"></div></button> <!----> <div data-comment-body="6900352" class="tm-comment-thread__indent_l-0"><div data-gallery-root="" class="tm-comment"><header data-comment-header="" tabindex="-1" class="tm-comment__header"><div class="tm-comment__header-inner"><span class="tm-user-info tm-comment__user-info"><a href="https://habr.com/ru/users/slpdmn/" class="tm-user-info__userpic" title="slpdmn"><div class="tm-entity-image"><img alt="" src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/0ebf1ebfdf8478b823dd65bb6caf2a9c.png" class="tm-entity-image__pic" width="24" height="24"></div></a> <span class="tm-user-info__user"><a href="https://habr.com/ru/users/slpdmn/" class="tm-user-info__username">
+      slpdmn
+    </a> <a href="#comment_6900352" class="tm-comment-thread__comment-link">
+                25.10.2013 в 09:06
+                <!----></a></span></span></div> <div class="tm-comment__buttons"><!----> <!----></div></header> <div class="tm-comment__body-content"><div xmlns="http://www.w3.org/1999/xhtml">А
+ какие все-таки требования были к БД? А то ограничение размера в 5МБ 
+(как у вас указано) ставит под сомнение необходимость в БД вообще и в 
+IndexedDB уж точно.</div></div> <!----> <!----></div> <div class="tm-comment-footer"><div class="tm-votes-meter tm-comment-footer__votes-meter"><svg height="24" width="24" class="tm-svg-img tm-votes-meter__icon tm-votes-meter__icon_appearance-comment"><title>Комментарий пока не оценивали</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-rating"></use></svg> <span title="Комментарий пока не оценивали" class="tm-votes-meter__value tm-votes-meter__value_appearance-comment tm-votes-meter__value_rating">0</span></div> <button type="button" class="tm-comment-thread__button">
+                  Ответить
+                </button> <button title="Добавить в закладки" type="button" class="bookmarks-button tm-comment-footer__button tm-comment-footer__button_with-icon"><span title="Добавить в закладки" class="tm-svg-icon__wrapper bookmarks-button__icon"><svg height="24" width="24" class="tm-svg-img tm-svg-icon"><title>Добавить в закладки</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-favorite"></use></svg></span> <!----></button> <button data-comment-popup="6900352" class="tm-comment__button tm-comment__button_with-icon"><svg height="16" width="16" class="tm-svg-img tm-comment__icon tm-comment__icon_dots"><title>Ещё</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#dots"></use></svg></button> <!----></div></div></article> <div class="tm-comment-thread__children"><section class="tm-comment-thread"><!----> <article class="tm-comment-thread__comment"><a name="comment_6901656" class="tm-comment-thread__target"></a> <button class="tm-comment-thread__breadcrumbs tm-comment-thread__indent_b_l-1"><div class="tm-comment-thread__circle"></div></button> <!----> <div data-comment-body="6901656" class="tm-comment-thread__indent_l-1"><div data-gallery-root="" class="tm-comment"><header data-comment-header="" tabindex="-1" class="tm-comment__header"><div class="tm-comment__header-inner"><span class="tm-user-info tm-comment__user-info"><a href="https://habr.com/ru/users/BaNru/" class="tm-user-info__userpic" title="BaNru"><div class="tm-entity-image"><img alt="" src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/df43f9335361806e656a4f0ca56730da.png" class="tm-entity-image__pic" width="24" height="24"></div></a> <span class="tm-user-info__user"><a href="https://habr.com/ru/users/BaNru/" class="tm-user-info__username">
+      BaNru
+    </a> <a href="#comment_6901656" class="tm-comment-thread__comment-link">
+                25.10.2013 в 12:39
+                <!----></a></span></span></div> <div class="tm-comment__buttons"><button type="button" class="tm-comment__button tm-comment__button_with-icon"><svg height="16" width="16" class="tm-svg-img tm-comment__icon"><title>Показать предыдущий комментарий</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#small-arrow"></use></svg></button> <!----></div></header> <div class="tm-comment__body-content"><div xmlns="http://www.w3.org/1999/xhtml"><blockquote>Перелопатив
+ много инфы мы пришли к выводу, что ограничение на размер БД можно 
+убрать использовав специальные флаги в манифесте нашего расширения:</blockquote></div></div> <!----> <!----></div> <div class="tm-comment-footer"><div class="tm-votes-meter tm-comment-footer__votes-meter"><svg height="24" width="24" class="tm-svg-img tm-votes-meter__icon tm-votes-meter__icon_appearance-comment"><title>Комментарий пока не оценивали</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-rating"></use></svg> <span title="Комментарий пока не оценивали" class="tm-votes-meter__value tm-votes-meter__value_appearance-comment tm-votes-meter__value_rating">0</span></div> <button type="button" class="tm-comment-thread__button">
+                  Ответить
+                </button> <button title="Добавить в закладки" type="button" class="bookmarks-button tm-comment-footer__button tm-comment-footer__button_with-icon"><span title="Добавить в закладки" class="tm-svg-icon__wrapper bookmarks-button__icon"><svg height="24" width="24" class="tm-svg-img tm-svg-icon"><title>Добавить в закладки</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-favorite"></use></svg></span> <!----></button> <button data-comment-popup="6901656" class="tm-comment__button tm-comment__button_with-icon"><svg height="16" width="16" class="tm-svg-img tm-comment__icon tm-comment__icon_dots"><title>Ещё</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#dots"></use></svg></button> <!----></div></div></article> <!----> <!----></section></div> <!----></section></div> </div></div> <div class="tm-notice tm-comments__comment-notice tm-notice_positive"><!----> <div class="tm-notice__inner"><!----> <div class="tm-notice__content"><span>Только полноправные пользователи могут оставлять комментарии. <a rel="nofollow" href="https://habr.com/kek/v1/auth/habrahabr/?back=/ru/post/198666/&amp;hl=ru">Войдите</a>, пожалуйста.</span></div></div></div></div></div></div></div></div> <div class="tm-ad-banner__container tm-page-article__banner"><a href="https://tmtm.ru/services/advertising/" target="_blank" class="tm-ad-banner__title">
+    Реклама
+  </a> <div id="articleBottomBanner" class="tm-ad-banner" data-google-query-id="CJ7_ioHZx_QCFcuwmgodh9UDKg"><div id="google_ads_iframe_/235032688/HH/HH02_inpage_wide_0__container__" style="border: 0pt none;"><iframe id="google_ads_iframe_/235032688/HH/HH02_inpage_wide_0" title="3rd party ad content" name="google_ads_iframe_/235032688/HH/HH02_inpage_wide_0" scrolling="no" marginwidth="0" marginheight="0" style="border: 0px none; vertical-align: bottom;" role="region" aria-label="Advertisement" tabindex="0" srcdoc="" data-google-container-id="1" data-load-complete="true" width="780" height="200" frameborder="0"></iframe></div></div></div> <section class="tm-block tm-block_spacing-around"><header class="tm-block__header"><h2 class="tm-block__title">Похожие публикации</h2> <!----></header> <div class="tm-block__body"><ul class="tm-article-list-block__list"><li class="tm-article-list-block__item"><article class="tm-article-snippet-block-block tm-article-snippet-block-block_preview"><div class="tm-article-snippet-block__user-meta"><div class="tm-article-snippet-block__date"><time datetime="2019-07-02T13:25:34.000Z" title="2019-07-02, 16:25">2  июля  2019 в 16:25</time></div></div> <h2 class="tm-article-title tm-article-title_block"><a href="https://habr.com/ru/post/458556/" class="tm-article-title__link"><span>Разработка Chrome Extension вместе с Angular CLI</span></a></h2> <div class="tm-data-icons"><!----> <div class="tm-votes-meter tm-data-icons__item"><svg height="24" width="24" class="tm-svg-img tm-votes-meter__icon tm-votes-meter__icon_appearance-article"><title>Всего голосов 8: ↑7 и ↓1</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-rating"></use></svg> <span title="Всего голосов 8: ↑7 и ↓1" class="tm-votes-meter__value tm-votes-meter__value_positive tm-votes-meter__value_appearance-article tm-votes-meter__value_rating">+6</span></div> <span class="tm-icon-counter tm-data-icons__item" title="Количество просмотров"><svg height="24" width="24" class="tm-svg-img tm-icon-counter__icon"><title>Просмотры</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-views"></use></svg> <span class="tm-icon-counter__value">3.3K</span></span> <button title="Добавить в закладки" type="button" class="bookmarks-button tm-data-icons__item"><span title="Добавить в закладки" class="tm-svg-icon__wrapper bookmarks-button__icon"><svg height="24" width="24" class="tm-svg-img tm-svg-icon"><title>Добавить в закладки</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-favorite"></use></svg></span> <span title="Количество пользователей, добавивших публикацию в закладки" class="bookmarks-button__counter">
+    29
+  </span></button> <div class="tm-article-comments-counter-link tm-data-icons__item" title="Читать комментарии"><a href="https://habr.com/ru/post/458556/comments/" class="tm-article-comments-counter-link__link"><svg height="24" width="24" class="tm-svg-img tm-article-comments-counter-link__icon"><title>Комментарии</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-comments"></use></svg> <span class="tm-article-comments-counter-link__value">
+      1
+    </span></a> <a href="https://habr.com/ru/post/458556/comments/" class="tm-article-comments-counter-link__link"><span title="Читать новые комментарии" class="tm-article-comments-counter-link__unread-counter">
+      +1
+    </span></a></div> <!----> <div class="v-portal" style="display: none;"></div></div></article></li><li class="tm-article-list-block__item"><article class="tm-article-snippet-block-block tm-article-snippet-block-block_preview"><div class="tm-article-snippet-block__user-meta"><div class="tm-article-snippet-block__date"><time datetime="2017-03-26T17:45:11.000Z" title="2017-03-26, 20:45">26  марта  2017 в 20:45</time></div></div> <h2 class="tm-article-title tm-article-title_block"><a href="https://habr.com/ru/post/324862/" class="tm-article-title__link"><span>Пример создания одного chrome extension</span></a></h2> <div class="tm-data-icons"><!----> <div class="tm-votes-meter tm-data-icons__item"><svg height="24" width="24" class="tm-svg-img tm-votes-meter__icon tm-votes-meter__icon_appearance-article"><title>Всего голосов 22: ↑16 и ↓6</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-rating"></use></svg> <span title="Всего голосов 22: ↑16 и ↓6" class="tm-votes-meter__value tm-votes-meter__value_positive tm-votes-meter__value_appearance-article tm-votes-meter__value_rating">+10</span></div> <span class="tm-icon-counter tm-data-icons__item" title="Количество просмотров"><svg height="24" width="24" class="tm-svg-img tm-icon-counter__icon"><title>Просмотры</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-views"></use></svg> <span class="tm-icon-counter__value">25K</span></span> <button title="Добавить в закладки" type="button" class="bookmarks-button tm-data-icons__item"><span title="Добавить в закладки" class="tm-svg-icon__wrapper bookmarks-button__icon"><svg height="24" width="24" class="tm-svg-img tm-svg-icon"><title>Добавить в закладки</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-favorite"></use></svg></span> <span title="Количество пользователей, добавивших публикацию в закладки" class="bookmarks-button__counter">
+    103
+  </span></button> <div class="tm-article-comments-counter-link tm-data-icons__item" title="Читать комментарии"><a href="https://habr.com/ru/post/324862/comments/" class="tm-article-comments-counter-link__link"><svg height="24" width="24" class="tm-svg-img tm-article-comments-counter-link__icon"><title>Комментарии</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-comments"></use></svg> <span class="tm-article-comments-counter-link__value">
+      16
+    </span></a> <a href="https://habr.com/ru/post/324862/comments/" class="tm-article-comments-counter-link__link"><span title="Читать новые комментарии" class="tm-article-comments-counter-link__unread-counter">
+      +16
+    </span></a></div> <!----> <div class="v-portal" style="display: none;"></div></div></article></li><li class="tm-article-list-block__item"><article class="tm-article-snippet-block-block tm-article-snippet-block-block_preview"><div class="tm-article-snippet-block__user-meta"><div class="tm-article-snippet-block__date"><time datetime="2017-01-30T08:47:15.000Z" title="2017-01-30, 11:47">30  января  2017 в 11:47</time></div></div> <h2 class="tm-article-title tm-article-title_block"><a href="https://habr.com/ru/post/320776/" class="tm-article-title__link"><span>Google Chrome Extensions: быстрый переводчик своими руками</span></a></h2> <div class="tm-data-icons"><!----> <div class="tm-votes-meter tm-data-icons__item"><svg height="24" width="24" class="tm-svg-img tm-votes-meter__icon tm-votes-meter__icon_appearance-article"><title>Всего голосов 26: ↑21 и ↓5</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-rating"></use></svg> <span title="Всего голосов 26: ↑21 и ↓5" class="tm-votes-meter__value tm-votes-meter__value_positive tm-votes-meter__value_appearance-article tm-votes-meter__value_rating">+16</span></div> <span class="tm-icon-counter tm-data-icons__item" title="Количество просмотров"><svg height="24" width="24" class="tm-svg-img tm-icon-counter__icon"><title>Просмотры</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-views"></use></svg> <span class="tm-icon-counter__value">15K</span></span> <button title="Добавить в закладки" type="button" class="bookmarks-button tm-data-icons__item"><span title="Добавить в закладки" class="tm-svg-icon__wrapper bookmarks-button__icon"><svg height="24" width="24" class="tm-svg-img tm-svg-icon"><title>Добавить в закладки</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-favorite"></use></svg></span> <span title="Количество пользователей, добавивших публикацию в закладки" class="bookmarks-button__counter">
+    139
+  </span></button> <div class="tm-article-comments-counter-link tm-data-icons__item" title="Читать комментарии"><a href="https://habr.com/ru/post/320776/comments/" class="tm-article-comments-counter-link__link"><svg height="24" width="24" class="tm-svg-img tm-article-comments-counter-link__icon"><title>Комментарии</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-comments"></use></svg> <span class="tm-article-comments-counter-link__value">
+      24
+    </span></a> <a href="https://habr.com/ru/post/320776/comments/" class="tm-article-comments-counter-link__link"><span title="Читать новые комментарии" class="tm-article-comments-counter-link__unread-counter">
+      +24
+    </span></a></div> <!----> <div class="v-portal" style="display: none;"></div></div></article></li> <!----></ul></div> <!----></section> <section class="tm-block tm-block_spacing-around"><header class="tm-block__header"><h2 class="tm-block__title">Минуточку внимания</h2> <div class="tm-block__header-aside"><a href="https://tmtm.ru/megapost/" target="_blank" class="tm-block-extralink">
+      Разместить
+    </a></div></header> <div class="tm-block__body"><div pagination="" slides-per-view="1" class="tm-promo-block__content-wrapper"><div class="tm-promo-block__item-wrapper"><a href="https://effect.habr.com/s/tozdEJmE4BRSZmAJ1Im8KA.jdmmwRzn6utKmaC38zZNNUCvDBlrM-9tBsHTR9hunYXa5T7pRm0sM5Qo1UmOEtbfAHWP4X23BS9nnnBnONQwjQ" rel="nofollow sponsored" class="tm-promo-block__item tm-article-title__link"><header class="tm-promo-block__head"><div class="tm-promo-block__image-wrapper"><img alt="" src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/wfmuhmBe9PKSoK0IZSryEQ.png" class="tm-promo-block__image"></div> <div class="tm-promo-block__label">
+              Событие
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 11 11" class="tm-block-promo__external"><path fill="currentColor" d="M7.5 0a.5.5 0 000 1h1.793L5.146 5.146a.5.5 0 10.708.708L10 1.707V3.5a.5.5 0 001 0v-3a.5.5 0 00-.5-.5h-3zm-7 1a.5.5 0 00-.5.5v9a.5.5 0 00.5.5h9a.5.5 0 00.5-.5V6a.5.5 0 00-1 0v4H1V2h4a.5.5 0 000-1H.5z"></path></svg></div></header> <div class="tm-promo-block__info"><h3 class="tm-promo-block__title">IT-архитектура и Cloud-технологии: как S7 управляет бигдатой</h3></div></a></div><div class="tm-promo-block__item-wrapper"><a href="https://effect.habr.com/s/tIPCBCfod3hXvA-I5FhflQ.8_qPKos2eAcA7daiL41aN2TEAcAxKAkjdm7Uk_tDUDYGTBjFqFoAzKjuCmFavSLFU93LYrUC55XadjW9NRpuYsJG8lfiU-rccI5S6GcKJjo" rel="nofollow sponsored" class="tm-promo-block__item tm-article-title__link"><header class="tm-promo-block__head"><div class="tm-promo-block__image-wrapper"><img alt="" src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/3c5nkPnsncYGcjAcd-BLrA.TxBSDYdOBdk1sTEWwW2xKZsuWpa4--sv" class="tm-promo-block__image"></div> <div class="tm-promo-block__label">
+              Событие
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 11 11" class="tm-block-promo__external"><path fill="currentColor" d="M7.5 0a.5.5 0 000 1h1.793L5.146 5.146a.5.5 0 10.708.708L10 1.707V3.5a.5.5 0 001 0v-3a.5.5 0 00-.5-.5h-3zm-7 1a.5.5 0 00-.5.5v9a.5.5 0 00.5.5h9a.5.5 0 00.5-.5V6a.5.5 0 00-1 0v4H1V2h4a.5.5 0 000-1H.5z"></path></svg></div></header> <div class="tm-promo-block__info"><h3 class="tm-promo-block__title">Ноги в руки: быстрый оффер для SRE-инженеров</h3></div></a></div><div class="tm-promo-block__item-wrapper"><a href="https://effect.habr.com/s/qzQpcDsnjtjxuSlIGu48Fg.sm_kAtVvfwBK4SlMTWzXncC1YMEoGpVVL5VereBq5OjLlRImCwtayYPgxPo74_fByvkrsToNzOXCVuDcEqWG1j7QrFN5MHq1vFU3INVELhk" rel="nofollow sponsored" class="tm-promo-block__item tm-article-title__link"><header class="tm-promo-block__head"><div class="tm-promo-block__image-wrapper"><img alt="" src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/R-NQ9KAPQxIDdnIYzQj_tw.jpg" class="tm-promo-block__image"></div> <div class="tm-promo-block__label">
+              Событие
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 11 11" class="tm-block-promo__external"><path fill="currentColor" d="M7.5 0a.5.5 0 000 1h1.793L5.146 5.146a.5.5 0 10.708.708L10 1.707V3.5a.5.5 0 001 0v-3a.5.5 0 00-.5-.5h-3zm-7 1a.5.5 0 00-.5.5v9a.5.5 0 00.5.5h9a.5.5 0 00.5-.5V6a.5.5 0 00-1 0v4H1V2h4a.5.5 0 000-1H.5z"></path></svg></div></header> <div class="tm-promo-block__info"><h3 class="tm-promo-block__title">Open Source vs коробки: вебкаст</h3></div></a></div></div></div> <!----></section> <div class="tm-project-block tm-project-block_variant-vacancies"><div class="tm-project-block__header"><div class="tm-project-block__title"><a href="https://career.habr.com/catalog?utm_campaign=vacancies_postlist&amp;utm_content=vacancies&amp;utm_medium=habr_block&amp;utm_source=habr_mob" rel="noopener" target="_blank" class="tm-project-block__title-link"> Вакансии </a></div></div> <div class="tm-project-block__content"><ul class="tm-project-block-items"><li class="tm-project-block-items__item"><a href="https://career.habr.com/vacancies/1000089625?utm_campaign=vacancies_postlist&amp;utm_content=vacancy&amp;utm_medium=habr_block&amp;utm_source=habr_mob" rel="noopener" target="_blank" class="tm-project-block-items__detail tm-project-block-items__title"><!---->JavaScript-программист
+    </a> <div class="tm-project-block-items__properties"><span class="tm-project-block-items__property-item">от 30&nbsp;000 до 60&nbsp;000 ₽</span><span class="tm-project-block-items__property-item">NewGen Vision</span><span class="tm-project-block-items__property-item">Санкт-Петербург</span></div></li><li class="tm-project-block-items__item"><a href="https://career.habr.com/vacancies/1000087693?utm_campaign=vacancies_postlist&amp;utm_content=vacancy&amp;utm_medium=habr_block&amp;utm_source=habr_mob" rel="noopener" target="_blank" class="tm-project-block-items__detail tm-project-block-items__title"><!---->JavaScript developer
+    </a> <div class="tm-project-block-items__properties"><span class="tm-project-block-items__property-item">от 3&nbsp;000 до 4&nbsp;500 €</span><span class="tm-project-block-items__property-item">Planner 5D</span><span class="tm-project-block-items__property-item">Можно удаленно</span></div></li><li class="tm-project-block-items__item"><a href="https://career.habr.com/vacancies/1000051575?utm_campaign=vacancies_postlist&amp;utm_content=vacancy&amp;utm_medium=habr_block&amp;utm_source=habr_mob" rel="noopener" target="_blank" class="tm-project-block-items__detail tm-project-block-items__title"><!----> JavaScript разработчик
+    </a> <div class="tm-project-block-items__properties"><span class="tm-project-block-items__property-item">от 180&nbsp;000 ₽</span><span class="tm-project-block-items__property-item">Sportrecs</span><span class="tm-project-block-items__property-item">Москва</span><span class="tm-project-block-items__property-item">Можно удаленно</span></div></li><li class="tm-project-block-items__item"><a href="https://career.habr.com/vacancies/1000089857?utm_campaign=vacancies_postlist&amp;utm_content=vacancy&amp;utm_medium=habr_block&amp;utm_source=habr_mob" rel="noopener" target="_blank" class="tm-project-block-items__detail tm-project-block-items__title"><!---->JavaScript разработчик
+    </a> <div class="tm-project-block-items__properties"><span class="tm-project-block-items__property-item">от 100&nbsp;000 ₽</span><span class="tm-project-block-items__property-item">Сбер</span><span class="tm-project-block-items__property-item">Иннополис</span></div></li><li class="tm-project-block-items__item"><a href="https://career.habr.com/vacancies/1000089650?utm_campaign=vacancies_postlist&amp;utm_content=vacancy&amp;utm_medium=habr_block&amp;utm_source=habr_mob" rel="noopener" target="_blank" class="tm-project-block-items__detail tm-project-block-items__title"><!---->Senior JavaScript/TypeScript Engineer
+    </a> <div class="tm-project-block-items__properties"><span class="tm-project-block-items__property-item">от 500&nbsp;000 ₽</span><span class="tm-project-block-items__property-item">FingerprintJS</span><span class="tm-project-block-items__property-item">Можно удаленно</span></div></li></ul></div> <div class="tm-project-block__footer"><a href="https://career.habr.com/catalog?utm_campaign=vacancies_postlist&amp;utm_content=vacancies_all&amp;utm_medium=habr_block&amp;utm_source=habr_mob" rel="noopener" target="_blank" class="tm-project-block__link">Больше вакансий на Хабр Карьере</a></div></div> <section class="tm-block tm-block_spacing-around"><header class="tm-block__header"><h2 class="tm-block__title">Лучшие публикации за сутки</h2> <!----></header> <div class="tm-block__body"><ul class="tm-article-list-block__list"><li class="tm-article-list-block__item"><article class="tm-article-snippet-block-block tm-article-snippet-block-block_preview"><div class="tm-article-snippet-block__user-meta"><div class="tm-article-snippet-block__date"><time datetime="2021-12-03T09:31:14.000Z" title="2021-12-03, 12:31">сегодня в 12:31</time></div></div> <h2 class="tm-article-title tm-article-title_block"><a href="https://habr.com/ru/post/593173/" class="tm-article-title__link"><span>[Пятничное] Теория Жоп</span></a></h2> <div class="tm-data-icons"><!----> <div class="tm-votes-meter tm-data-icons__item"><svg height="24" width="24" class="tm-svg-img tm-votes-meter__icon tm-votes-meter__icon_appearance-article"><title>Всего голосов 134: ↑131 и ↓3</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-rating"></use></svg> <span title="Всего голосов 134: ↑131 и ↓3" class="tm-votes-meter__value tm-votes-meter__value_positive tm-votes-meter__value_appearance-article tm-votes-meter__value_rating">+128</span></div> <span class="tm-icon-counter tm-data-icons__item" title="Количество просмотров"><svg height="24" width="24" class="tm-svg-img tm-icon-counter__icon"><title>Просмотры</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-views"></use></svg> <span class="tm-icon-counter__value">12K</span></span> <button title="Добавить в закладки" type="button" class="bookmarks-button tm-data-icons__item"><span title="Добавить в закладки" class="tm-svg-icon__wrapper bookmarks-button__icon"><svg height="24" width="24" class="tm-svg-img tm-svg-icon"><title>Добавить в закладки</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-favorite"></use></svg></span> <span title="Количество пользователей, добавивших публикацию в закладки" class="bookmarks-button__counter">
+    71
+  </span></button> <div class="tm-article-comments-counter-link tm-data-icons__item" title="Читать комментарии"><a href="https://habr.com/ru/post/593173/comments/" class="tm-article-comments-counter-link__link"><svg height="24" width="24" class="tm-svg-img tm-article-comments-counter-link__icon"><title>Комментарии</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-comments"></use></svg> <span class="tm-article-comments-counter-link__value">
+      14
+    </span></a> <a href="https://habr.com/ru/post/593173/comments/" class="tm-article-comments-counter-link__link"><span title="Читать новые комментарии" class="tm-article-comments-counter-link__unread-counter">
+      +14
+    </span></a></div> <!----> <div class="v-portal" style="display: none;"></div></div></article></li><li class="tm-article-list-block__item"><article class="tm-article-snippet-block-block tm-article-snippet-block-block_preview"><div class="tm-article-snippet-block__user-meta"><div class="tm-article-snippet-block__date"><time datetime="2021-12-02T21:23:31.000Z" title="2021-12-03, 00:23">сегодня в 00:23</time></div></div> <h2 class="tm-article-title tm-article-title_block"><a href="https://habr.com/ru/post/593097/" class="tm-article-title__link"><span>Язык программирования Ficus для вычислений и не только</span></a></h2> <div class="tm-data-icons"><!----> <div class="tm-votes-meter tm-data-icons__item"><svg height="24" width="24" class="tm-svg-img tm-votes-meter__icon tm-votes-meter__icon_appearance-article"><title>Всего голосов 50: ↑50 и ↓0</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-rating"></use></svg> <span title="Всего голосов 50: ↑50 и ↓0" class="tm-votes-meter__value tm-votes-meter__value_positive tm-votes-meter__value_appearance-article tm-votes-meter__value_rating">+50</span></div> <span class="tm-icon-counter tm-data-icons__item" title="Количество просмотров"><svg height="24" width="24" class="tm-svg-img tm-icon-counter__icon"><title>Просмотры</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-views"></use></svg> <span class="tm-icon-counter__value">4.2K</span></span> <button title="Добавить в закладки" type="button" class="bookmarks-button tm-data-icons__item"><span title="Добавить в закладки" class="tm-svg-icon__wrapper bookmarks-button__icon"><svg height="24" width="24" class="tm-svg-img tm-svg-icon"><title>Добавить в закладки</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-favorite"></use></svg></span> <span title="Количество пользователей, добавивших публикацию в закладки" class="bookmarks-button__counter">
+    23
+  </span></button> <div class="tm-article-comments-counter-link tm-data-icons__item" title="Читать комментарии"><a href="https://habr.com/ru/post/593097/comments/" class="tm-article-comments-counter-link__link"><svg height="24" width="24" class="tm-svg-img tm-article-comments-counter-link__icon"><title>Комментарии</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-comments"></use></svg> <span class="tm-article-comments-counter-link__value">
+      19
+    </span></a> <a href="https://habr.com/ru/post/593097/comments/" class="tm-article-comments-counter-link__link"><span title="Читать новые комментарии" class="tm-article-comments-counter-link__unread-counter">
+      +19
+    </span></a></div> <!----> <div class="v-portal" style="display: none;"></div></div></article></li><li class="tm-article-list-block__item"><article class="tm-article-snippet-block-block tm-article-snippet-block-block_preview"><div class="tm-article-snippet-block__user-meta"><div class="tm-article-snippet-block__date"><time datetime="2021-12-02T18:36:44.000Z" title="2021-12-02, 21:36">вчера в 21:36</time></div></div> <h2 class="tm-article-title tm-article-title_block"><a href="https://habr.com/ru/post/593085/" class="tm-article-title__link"><span>Как я снимал трейлер&nbsp;несуществующего фильма</span></a></h2> <div class="tm-data-icons"><!----> <div class="tm-votes-meter tm-data-icons__item"><svg height="24" width="24" class="tm-svg-img tm-votes-meter__icon tm-votes-meter__icon_appearance-article"><title>Всего голосов 41: ↑40 и ↓1</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-rating"></use></svg> <span title="Всего голосов 41: ↑40 и ↓1" class="tm-votes-meter__value tm-votes-meter__value_positive tm-votes-meter__value_appearance-article tm-votes-meter__value_rating">+39</span></div> <span class="tm-icon-counter tm-data-icons__item" title="Количество просмотров"><svg height="24" width="24" class="tm-svg-img tm-icon-counter__icon"><title>Просмотры</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-views"></use></svg> <span class="tm-icon-counter__value">4.9K</span></span> <button title="Добавить в закладки" type="button" class="bookmarks-button tm-data-icons__item"><span title="Добавить в закладки" class="tm-svg-icon__wrapper bookmarks-button__icon"><svg height="24" width="24" class="tm-svg-img tm-svg-icon"><title>Добавить в закладки</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-favorite"></use></svg></span> <span title="Количество пользователей, добавивших публикацию в закладки" class="bookmarks-button__counter">
+    13
+  </span></button> <div class="tm-article-comments-counter-link tm-data-icons__item" title="Читать комментарии"><a href="https://habr.com/ru/post/593085/comments/" class="tm-article-comments-counter-link__link"><svg height="24" width="24" class="tm-svg-img tm-article-comments-counter-link__icon"><title>Комментарии</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-comments"></use></svg> <span class="tm-article-comments-counter-link__value">
+      54
+    </span></a> <a href="https://habr.com/ru/post/593085/comments/" class="tm-article-comments-counter-link__link"><span title="Читать новые комментарии" class="tm-article-comments-counter-link__unread-counter">
+      +54
+    </span></a></div> <!----> <div class="v-portal" style="display: none;"></div></div></article></li><li class="tm-article-list-block__item"><article class="tm-article-snippet-block-block tm-article-snippet-block-block_preview"><div class="tm-article-snippet-block__user-meta"><div class="tm-article-snippet-block__date"><time datetime="2021-12-03T09:41:24.000Z" title="2021-12-03, 12:41">сегодня в 12:41</time></div></div> <h2 class="tm-article-title tm-article-title_block"><a href="https://habr.com/ru/post/593179/" class="tm-article-title__link"><span>«Позвоните Кузе» — интервью с российскими ретроэнтузиастами, воссоздавшими популярное шоу 90-х годов</span></a></h2> <div class="tm-data-icons"><!----> <div class="tm-votes-meter tm-data-icons__item"><svg height="24" width="24" class="tm-svg-img tm-votes-meter__icon tm-votes-meter__icon_appearance-article"><title>Всего голосов 37: ↑36 и ↓1</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-rating"></use></svg> <span title="Всего голосов 37: ↑36 и ↓1" class="tm-votes-meter__value tm-votes-meter__value_positive tm-votes-meter__value_appearance-article tm-votes-meter__value_rating">+35</span></div> <span class="tm-icon-counter tm-data-icons__item" title="Количество просмотров"><svg height="24" width="24" class="tm-svg-img tm-icon-counter__icon"><title>Просмотры</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-views"></use></svg> <span class="tm-icon-counter__value">2.5K</span></span> <button title="Добавить в закладки" type="button" class="bookmarks-button tm-data-icons__item"><span title="Добавить в закладки" class="tm-svg-icon__wrapper bookmarks-button__icon"><svg height="24" width="24" class="tm-svg-img tm-svg-icon"><title>Добавить в закладки</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-favorite"></use></svg></span> <span title="Количество пользователей, добавивших публикацию в закладки" class="bookmarks-button__counter">
+    4
+  </span></button> <div class="tm-article-comments-counter-link tm-data-icons__item" title="Читать комментарии"><a href="https://habr.com/ru/post/593179/comments/" class="tm-article-comments-counter-link__link"><svg height="24" width="24" class="tm-svg-img tm-article-comments-counter-link__icon"><title>Комментарии</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-comments"></use></svg> <span class="tm-article-comments-counter-link__value">
+      4
+    </span></a> <a href="https://habr.com/ru/post/593179/comments/" class="tm-article-comments-counter-link__link"><span title="Читать новые комментарии" class="tm-article-comments-counter-link__unread-counter">
+      +4
+    </span></a></div> <!----> <div class="v-portal" style="display: none;"></div></div></article></li><li class="tm-article-list-block__item"><article class="tm-article-snippet-block-block tm-article-snippet-block-block_preview"><div class="tm-article-snippet-block__user-meta"><div class="tm-article-snippet-block__date"><time datetime="2021-12-02T14:57:27.000Z" title="2021-12-02, 17:57">вчера в 17:57</time></div></div> <h2 class="tm-article-title tm-article-title_block"><a href="https://habr.com/ru/post/593043/" class="tm-article-title__link"><span>Фальсифицируем выборы в Государственную Думу 2021 года, а потом отменяем фальсификации с помощью машинного обучения</span></a></h2> <div class="tm-data-icons"><!----> <div class="tm-votes-meter tm-data-icons__item"><svg height="24" width="24" class="tm-svg-img tm-votes-meter__icon tm-votes-meter__icon_appearance-article"><title>Всего голосов 30: ↑29 и ↓1</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-rating"></use></svg> <span title="Всего голосов 30: ↑29 и ↓1" class="tm-votes-meter__value tm-votes-meter__value_positive tm-votes-meter__value_appearance-article tm-votes-meter__value_rating">+28</span></div> <span class="tm-icon-counter tm-data-icons__item" title="Количество просмотров"><svg height="24" width="24" class="tm-svg-img tm-icon-counter__icon"><title>Просмотры</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-views"></use></svg> <span class="tm-icon-counter__value">6.3K</span></span> <button title="Добавить в закладки" type="button" class="bookmarks-button tm-data-icons__item"><span title="Добавить в закладки" class="tm-svg-icon__wrapper bookmarks-button__icon"><svg height="24" width="24" class="tm-svg-img tm-svg-icon"><title>Добавить в закладки</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-favorite"></use></svg></span> <span title="Количество пользователей, добавивших публикацию в закладки" class="bookmarks-button__counter">
+    19
+  </span></button> <div class="tm-article-comments-counter-link tm-data-icons__item" title="Читать комментарии"><a href="https://habr.com/ru/post/593043/comments/" class="tm-article-comments-counter-link__link"><svg height="24" width="24" class="tm-svg-img tm-article-comments-counter-link__icon"><title>Комментарии</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-comments"></use></svg> <span class="tm-article-comments-counter-link__value">
+      21
+    </span></a> <a href="https://habr.com/ru/post/593043/comments/" class="tm-article-comments-counter-link__link"><span title="Читать новые комментарии" class="tm-article-comments-counter-link__unread-counter">
+      +21
+    </span></a></div> <!----> <div class="v-portal" style="display: none;"></div></div></article></li> <!----></ul></div> <!----></section> </div></div></div></div></div> <div class="tm-page__sidebar"><div class="tm-layout-sidebar"><div class="tm-layout-sidebar__ads tm-layout-sidebar__ads_margin"><div class="tm-ad-banner__container tm-layout-sidebar__banner"><a href="https://tmtm.ru/services/advertising/" target="_blank" class="tm-ad-banner__title">
+    Реклама
+  </a> <div id="sidebarBanner" class="tm-ad-banner" data-google-query-id="CKWBi4HZx_QCFY-amgodTiUBLQ"><div id="google_ads_iframe_/235032688/HH/HH01_ATF_Poster_0__container__" style="border: 0pt none;"><iframe id="google_ads_iframe_/235032688/HH/HH01_ATF_Poster_0" title="3rd party ad content" name="google_ads_iframe_/235032688/HH/HH01_ATF_Poster_0" scrolling="no" marginwidth="0" marginheight="0" style="border: 0px none; vertical-align: bottom;" role="region" aria-label="Advertisement" tabindex="0" srcdoc="" data-google-container-id="2" data-load-complete="true" width="300" height="500" frameborder="0"></iframe></div></div></div></div> <div class="tm-sexy-sidebar tm-sexy-sidebar_margin" style="margin-top: 8291px;"><section class="tm-block tm-block_spacing-bottom"><header class="tm-block__header"><h2 class="tm-block__title">Читают сейчас</h2> <!----></header> <div class="tm-block__body"><ul class="tm-article-list-block__list"><li class="tm-article-list-block__item"><article class="tm-article-snippet-block-sidebar tm-article-snippet-block-sidebar_preview"><!----> <h2 class="tm-article-title tm-article-title_sidebar"><a href="https://habr.com/ru/post/593173/" class="tm-article-title__link"><span>[Пятничное] Теория Жоп</span></a></h2> <div class="tm-data-icons"><!----> <!----> <span class="tm-icon-counter tm-data-icons__item" title="Количество просмотров"><svg height="24" width="24" class="tm-svg-img tm-icon-counter__icon"><title>Просмотры</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-views"></use></svg> <span class="tm-icon-counter__value">12K</span></span> <!----> <div class="tm-article-comments-counter-link tm-data-icons__item" title="Читать комментарии"><a href="https://habr.com/ru/post/593173/comments/" class="tm-article-comments-counter-link__link"><svg height="24" width="24" class="tm-svg-img tm-article-comments-counter-link__icon"><title>Комментарии</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-comments"></use></svg> <span class="tm-article-comments-counter-link__value">
+      14
+    </span></a> <a href="https://habr.com/ru/post/593173/comments/" class="tm-article-comments-counter-link__link"><span title="Читать новые комментарии" class="tm-article-comments-counter-link__unread-counter">
+      +14
+    </span></a></div> <!----> <div class="v-portal" style="display: none;"></div></div></article></li><li class="tm-article-list-block__item"><article class="tm-article-snippet-block-sidebar tm-article-snippet-block-sidebar_preview"><!----> <h2 class="tm-article-title tm-article-title_sidebar"><a href="https://habr.com/ru/post/593187/" class="tm-article-title__link"><span>Пять книг, которые изменили мою карьеру программиста</span></a></h2> <div class="tm-data-icons"><!----> <!----> <span class="tm-icon-counter tm-data-icons__item" title="Количество просмотров"><svg height="24" width="24" class="tm-svg-img tm-icon-counter__icon"><title>Просмотры</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-views"></use></svg> <span class="tm-icon-counter__value">4.7K</span></span> <!----> <div class="tm-article-comments-counter-link tm-data-icons__item" title="Читать комментарии"><a href="https://habr.com/ru/post/593187/comments/" class="tm-article-comments-counter-link__link"><svg height="24" width="24" class="tm-svg-img tm-article-comments-counter-link__icon"><title>Комментарии</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-comments"></use></svg> <span class="tm-article-comments-counter-link__value">
+      4
+    </span></a> <a href="https://habr.com/ru/post/593187/comments/" class="tm-article-comments-counter-link__link"><span title="Читать новые комментарии" class="tm-article-comments-counter-link__unread-counter">
+      +4
+    </span></a></div> <!----> <div class="v-portal" style="display: none;"></div></div></article></li><li class="tm-article-list-block__item"><article class="tm-article-snippet-block-sidebar tm-article-snippet-block-sidebar_preview"><!----> <h2 class="tm-article-title tm-article-title_sidebar"><a href="https://habr.com/ru/company/skillfactory/blog/593025/" class="tm-article-title__link"><span>Самые популярные языки программирования 2021 года. Свежий хабратоп</span></a></h2> <div class="tm-data-icons"><!----> <!----> <span class="tm-icon-counter tm-data-icons__item" title="Количество просмотров"><svg height="24" width="24" class="tm-svg-img tm-icon-counter__icon"><title>Просмотры</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-views"></use></svg> <span class="tm-icon-counter__value">25K</span></span> <!----> <div class="tm-article-comments-counter-link tm-data-icons__item" title="Читать комментарии"><a href="https://habr.com/ru/company/skillfactory/blog/593025/comments/" class="tm-article-comments-counter-link__link"><svg height="24" width="24" class="tm-svg-img tm-article-comments-counter-link__icon"><title>Комментарии</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-comments"></use></svg> <span class="tm-article-comments-counter-link__value">
+      64
+    </span></a> <a href="https://habr.com/ru/company/skillfactory/blog/593025/comments/" class="tm-article-comments-counter-link__link"><span title="Читать новые комментарии" class="tm-article-comments-counter-link__unread-counter">
+      +64
+    </span></a></div> <!----> <div class="v-portal" style="display: none;"></div></div></article></li><li class="tm-article-list-block__item"><article class="tm-article-snippet-block-sidebar tm-article-snippet-block-sidebar_preview"><!----> <h2 class="tm-article-title tm-article-title_sidebar"><a href="https://habr.com/ru/news/t/593215/" class="tm-article-title__link"><span>РБК: Гендиректор VK&nbsp;Борис Добродеев ушёл в&nbsp;отставку, его место займёт сын Сергея Кириенко</span></a></h2> <div class="tm-data-icons"><!----> <!----> <span class="tm-icon-counter tm-data-icons__item" title="Количество просмотров"><svg height="24" width="24" class="tm-svg-img tm-icon-counter__icon"><title>Просмотры</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-views"></use></svg> <span class="tm-icon-counter__value">2.2K</span></span> <!----> <div class="tm-article-comments-counter-link tm-data-icons__item" title="Читать комментарии"><a href="https://habr.com/ru/news/t/593215/comments/" class="tm-article-comments-counter-link__link"><svg height="24" width="24" class="tm-svg-img tm-article-comments-counter-link__icon"><title>Комментарии</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-comments"></use></svg> <span class="tm-article-comments-counter-link__value">
+      7
+    </span></a> <a href="https://habr.com/ru/news/t/593215/comments/" class="tm-article-comments-counter-link__link"><span title="Читать новые комментарии" class="tm-article-comments-counter-link__unread-counter">
+      +7
+    </span></a></div> <!----> <div class="v-portal" style="display: none;"></div></div></article></li><li class="tm-article-list-block__item"><article class="tm-article-snippet-block-sidebar tm-article-snippet-block-sidebar_preview"><!----> <h2 class="tm-article-title tm-article-title_sidebar"><a href="https://habr.com/ru/company/timeweb/blog/593003/" class="tm-article-title__link"><span>Как я в десять раз ускорил работу таблицы Google одной строкой CSS</span></a></h2> <div class="tm-data-icons"><!----> <!----> <span class="tm-icon-counter tm-data-icons__item" title="Количество просмотров"><svg height="24" width="24" class="tm-svg-img tm-icon-counter__icon"><title>Просмотры</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-views"></use></svg> <span class="tm-icon-counter__value">14K</span></span> <!----> <div class="tm-article-comments-counter-link tm-data-icons__item" title="Читать комментарии"><a href="https://habr.com/ru/company/timeweb/blog/593003/comments/" class="tm-article-comments-counter-link__link"><svg height="24" width="24" class="tm-svg-img tm-article-comments-counter-link__icon"><title>Комментарии</title> <use xlink:href="/img/megazord-v24.4a410f80.svg#counter-comments"></use></svg> <span class="tm-article-comments-counter-link__value">
+      14
+    </span></a> <a href="https://habr.com/ru/company/timeweb/blog/593003/comments/" class="tm-article-comments-counter-link__link"><span title="Читать новые комментарии" class="tm-article-comments-counter-link__unread-counter">
+      +14
+    </span></a></div> <!----> <div class="v-portal" style="display: none;"></div></div></article></li> <li class="tm-article-list-block__item"><a href="https://u.habr.com/aktiv_chs" class="tm-most-reading-block__promo-post">Криптографические системы в IoT: вехи развития</a> <div class="tm-most-reading-block__label">Турбо</div></li></ul></div> <!----></section> <section data-async-called="true" class="tm-block tm-block_spacing-bottom"><header class="tm-block__header"><h2 class="tm-block__title">Работа</h2> <!----></header> <div class="tm-block__body"><div class="tm-vacancies-block__item"><a href="https://career.habr.com/vacancies/programmist_javascript" target="_blank" class="tm-vacancies-block__vacancy-title">
+        JavaScript разработчик
+      </a> <div class="tm-vacancies-block__vacancies-count">
+        659
+    вакансий
+      </div></div><div class="tm-vacancies-block__item"><a href="https://career.habr.com/vacancies/react_razrabotchik" target="_blank" class="tm-vacancies-block__vacancy-title">
+        React разработчик
+      </a> <div class="tm-vacancies-block__vacancies-count">
+        316
+    вакансий
+      </div></div></div> <footer class="tm-block__footer"><a href="https://career.habr.com/catalog" class="tm-block-extralink">
+      Все вакансии
+    </a></footer></section></div></div></div></div></div></div></main> <!----></div> <div class="tm-footer-menu"><div class="tm-page-width"><div class="tm-footer-menu__container"><div class="tm-footer-menu__block"><h3 class="tm-footer-menu__block-title">
+          Ваш аккаунт
+        </h3> <div class="tm-footer-menu__block-content"><ul class="tm-footer-menu__list"><li class="tm-footer-menu__list-item"><a href="https://habr.com/kek/v1/auth/habrahabr/?back=/ru/post/198666/&amp;hl=ru" rel="nofollow" target="_self">
+                Войти
+              </a></li><li class="tm-footer-menu__list-item"><a href="https://habr.com/kek/v1/auth/habrahabr-register/?back=/ru/post/198666/&amp;hl=ru" rel="nofollow" target="_self">
+                Регистрация
+              </a></li></ul></div></div><div class="tm-footer-menu__block"><h3 class="tm-footer-menu__block-title">
+          Разделы
+        </h3> <div class="tm-footer-menu__block-content"><ul class="tm-footer-menu__list"><li class="tm-footer-menu__list-item"><a href="https://habr.com/ru/" class="footer-menu__item-link router-link-active">
+                Публикации
+              </a></li><li class="tm-footer-menu__list-item"><a href="https://habr.com/ru/news/" class="footer-menu__item-link">
+                Новости
+              </a></li><li class="tm-footer-menu__list-item"><a href="https://habr.com/ru/hubs/" class="footer-menu__item-link">
+                Хабы
+              </a></li><li class="tm-footer-menu__list-item"><a href="https://habr.com/ru/companies/" class="footer-menu__item-link">
+                Компании
+              </a></li><li class="tm-footer-menu__list-item"><a href="https://habr.com/ru/users/" class="footer-menu__item-link">
+                Авторы
+              </a></li><li class="tm-footer-menu__list-item"><a href="https://habr.com/ru/sandbox/" class="footer-menu__item-link">
+                Песочница
+              </a></li></ul></div></div><div class="tm-footer-menu__block"><h3 class="tm-footer-menu__block-title">
+          Информация
+        </h3> <div class="tm-footer-menu__block-content"><ul class="tm-footer-menu__list"><li class="tm-footer-menu__list-item"><a href="https://habr.com/ru/docs/help/" class="footer-menu__item-link">
+                Устройство сайта
+              </a></li><li class="tm-footer-menu__list-item"><a href="https://habr.com/ru/docs/authors/codex/" class="footer-menu__item-link">
+                Для авторов
+              </a></li><li class="tm-footer-menu__list-item"><a href="https://habr.com/ru/docs/companies/corpblogs/" class="footer-menu__item-link">
+                Для компаний
+              </a></li><li class="tm-footer-menu__list-item"><a href="https://habr.com/ru/docs/docs/transparency/" class="footer-menu__item-link">
+                Документы
+              </a></li><li class="tm-footer-menu__list-item"><a href="https://account.habr.com/info/agreement" target="_blank">
+                Соглашение
+              </a></li><li class="tm-footer-menu__list-item"><a href="https://account.habr.com/info/confidential/" target="_blank">
+                Конфиденциальность
+              </a></li></ul></div></div><div class="tm-footer-menu__block"><h3 class="tm-footer-menu__block-title">
+          Услуги
+        </h3> <div class="tm-footer-menu__block-content"><ul class="tm-footer-menu__list"><li class="tm-footer-menu__list-item"><a href="https://docs.google.com/presentation/d/e/2PACX-1vQLwRfQmXibiUlWaRg-BAc38s7oM3lJiaPju7qmdJsp8ysIvZ_G-Npem0njJLMozE2bPHMpDqiI5hhy/pub?start=false&amp;loop=false&amp;delayms=60000&amp;slide=id.g91a03369cd_4_297" target="_blank">
+                Реклама
+              </a></li><li class="tm-footer-menu__list-item"><a href="https://habrastorage.org/storage/stuff/habr/service_price.pdf" target="_blank">
+                Тарифы
+              </a></li><li class="tm-footer-menu__list-item"><a href="https://docs.google.com/presentation/d/e/2PACX-1vQJJds8-Di7BQSP_guHxICN7woVYoN5NP_22ra-BIo4bqnTT9FR6fB-Ku2P0AoRpX0Ds-LRkDeAoD8F/pub?start=false&amp;loop=false&amp;delayms=60000" target="_blank">
+                Контент
+              </a></li><li class="tm-footer-menu__list-item"><a href="https://tmtm.timepad.ru/" target="_blank">
+                Семинары
+              </a></li><li class="tm-footer-menu__list-item"><a href="https://habr.com/ru/megaprojects/" class="footer-menu__item-link">
+                Мегапроекты
+              </a></li></ul></div></div></div></div></div> <div class="tm-footer"><div class="tm-page-width"><div class="tm-footer__container"><!----> <div class="tm-footer__social"><a href="https://www.facebook.com/habrahabr.ru" rel="nofollow noopener noreferrer" target="_blank" class="tm-svg-icon__wrapper tm-social-icons__icon"><svg height="16" width="16" class="tm-svg-img tm-svg-icon"><title>Facebook</title> <use xlink:href="/img/social-icons-sprite.svg#social-logo-facebook"></use></svg></a><a href="https://twitter.com/habr_com" rel="nofollow noopener noreferrer" target="_blank" class="tm-svg-icon__wrapper tm-social-icons__icon"><svg height="16" width="16" class="tm-svg-img tm-svg-icon"><title>Twitter</title> <use xlink:href="/img/social-icons-sprite.svg#social-logo-twitter"></use></svg></a><a href="https://vk.com/habr" rel="nofollow noopener noreferrer" target="_blank" class="tm-svg-icon__wrapper tm-social-icons__icon"><svg height="16" width="16" class="tm-svg-img tm-svg-icon"><title>VK</title> <use xlink:href="/img/social-icons-sprite.svg#social-logo-vkontakte"></use></svg></a><a href="https://telegram.me/habr_com" rel="nofollow noopener noreferrer" target="_blank" class="tm-svg-icon__wrapper tm-social-icons__icon"><svg height="16" width="16" class="tm-svg-img tm-svg-icon"><title>Telegram</title> <use xlink:href="/img/social-icons-sprite.svg#social-logo-telegram"></use></svg></a><a href="https://www.youtube.com/channel/UCd_sTwKqVrweTt4oAKY5y4w" rel="nofollow noopener noreferrer" target="_blank" class="tm-svg-icon__wrapper tm-social-icons__icon"><svg height="16" width="16" class="tm-svg-img tm-svg-icon"><title>Youtube</title> <use xlink:href="/img/social-icons-sprite.svg#social-logo-youtube"></use></svg></a><a href="https://zen.yandex.ru/habr" rel="nofollow noopener noreferrer" target="_blank" class="tm-svg-icon__wrapper tm-social-icons__icon"><svg height="16" width="16" class="tm-svg-img tm-svg-icon"><title>Яндекс Дзен</title> <use xlink:href="/img/social-icons-sprite.svg#social-logo-zen"></use></svg></a></div> <div class="v-portal" style="display:none;"></div> <button class="tm-footer__link"><!---->
+        Настройка языка
+      </button> <a href="https://habr.com/ru/about" class="tm-footer__link">
+        О сайте
+      </a> <a href="https://habr.com/ru/feedback/" class="tm-footer__link">
+        Техническая поддержка
+      </a> <!----> <a href="https://habr.com/berserk-mode-nope" class="tm-footer__link">
+        Вернуться на старую версию
+      </a> <div class="tm-footer-copyright"><span class="tm-copyright"><span class="tm-copyright__years">© 2006–2021 </span> <span class="tm-copyright__name">«<a href="https://company.habr.com/" rel="noopener" target="_blank" class="tm-copyright__link">Habr</a>»</span></span></div></div></div></div> <!----> <!----></div> <div class="vue-portal-target"><!----></div></div>
+
+<script src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/chunk-vendors.js" defer="defer"></script><script src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/app.js" defer="defer"></script>
+
+
+
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    </script>
+  
+  <script type="text/javascript">
+    (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+    m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+    (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+
+    ym(24049213, "init", {
+      defer:true,
+      trackLinks:true,
+      accurateTrackBounce:true,
+      webvisor:false,
+    });
+  </script>
+  <noscript>
+    <div>
+      <img src="https://mc.yandex.ru/watch/24049213" style="position:absolute; left:-9999px;" alt="" />
+    </div>
+  </noscript>
+  
+    <script type="text/javascript">
+      window.addEventListener('load', function () {
+        setTimeout(() => {
+          const img = new Image();
+          img.src = 'https://vk.com/rtrg?p=VK-RTRG-421343-57vKE';
+        }, 0);
+      });
+    </script>
+  
+<script src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/ads.js" onload="window['zhY4i4nJ9K'] = true"></script><iframe src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/container.htm" style="visibility: hidden; display: none;"></iframe><div id="K9Jn4i4Yhz" style="display: none;"></div>
+
+
+<div><div><div class="Vue-Toastification__container top-left"></div></div><div><div class="Vue-Toastification__container top-center"></div></div><div><div class="Vue-Toastification__container top-right"></div></div><div><div class="Vue-Toastification__container bottom-left"></div></div><div><div class="Vue-Toastification__container bottom-center"></div></div><div><div class="Vue-Toastification__container bottom-right"></div></div></div><iframe src="IndexedDB%20%E2%80%94%20%D0%B1%D0%B5%D0%B7%D0%BB%D0%B8%D0%BC%D0%B8%D1%82%D0%BD%D0%BE%D0%B5%20%D1%85%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20_%20%D0%A5%D0%B0%D0%B1%D1%80_files/aframe.htm" style="display: none;" width="0" height="0"></iframe></body></html>
