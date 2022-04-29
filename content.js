@@ -331,3 +331,44 @@ function refreshStatus() {
 		}
 	}, plg_psca_timeout);
 })();
+
+chrome.runtime.onMessage.addListener(
+	function (request, sender, sendResponse) {
+		// console.log(sender.tab ? "from content script:" + sender.tab.url : "from extension");
+		// console.log(request);
+		// sendResponse({farewell: "goodbye"});
+		// $('div[ng-controller="IncidentsFilterCtrl as f"] input[placeholder="Поиск по ID"]')/*.each(
+		// 	function (){
+		// 		$(this).val(request.inc);
+		// 		// let e = $.Event("keypress");
+		// 		// e.keyCode = 13; // # Some key code value
+		// 		// $(this).trigger(e);
+		// 	}
+		// )*/.val(request.inc);
+		// $('div[ng-controller="IncidentsFilterCtrl as f"] input[placeholder="Поиск по ID"]').trigger('keypress');
+		// $('div[ng-controller="IncidentsFilterCtrl as f"] input[placeholder="Поиск по ID"]').focus();
+		// $('div[ng-controller="IncidentsFilterCtrl as f"] input[placeholder="Поиск по ID"]').trigger($.Event('keydown'));
+		// $('div[ng-controller="IncidentsFilterCtrl as f"] input[placeholder="Поиск по ID"]').trigger($.Event('keypress'));
+		// $('div[ng-controller="IncidentsFilterCtrl as f"] input[placeholder="Поиск по ID"]').trigger($.Event('keyup'));
+		// $('div[ng-controller="IncidentsFilterCtrl as f"] input[placeholder="Поиск по ID"]').trigger($.Event('input'));
+		// $('div[ng-controller="IncidentsFilterCtrl as f"] input[placeholder="Поиск по ID"]').trigger($.Event('change'));
+
+		// let e = $.Event("keypress");
+		// e.keyCode = 32; // # Some key code value
+		// $('div[ng-controller="IncidentsFilterCtrl as f"] input[placeholder="Поиск по ID"]').trigger(e);
+		// e.keyCode = 8; // # Some key code value
+		// $('div[ng-controller="IncidentsFilterCtrl as f"] input[placeholder="Поиск по ID"]').trigger(e);
+		// $('div[ng-controller="IncidentsFilterCtrl as f"] .filter-form div.search-block div.submit input').trigger(e);
+		// $('div[ng-controller="IncidentsFilterCtrl as f"] .filter-form div.search-block div.submit input').submit();
+		input = document.querySelector('div[ng-controller="IncidentsFilterCtrl as f"] input[placeholder="Поиск по ID"]');
+		input.value = request.inc;
+		input.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true }));
+		input.dispatchEvent(new KeyboardEvent('keypress', { bubbles: true }));
+		input.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
+		input.dispatchEvent(new Event('input', { bubbles: true }));
+		input.dispatchEvent(new Event('change', { bubbles: true }));
+
+		$('div[ng-controller="IncidentsFilterCtrl as f"] .filter-form div.search-block div.submit input').trigger('click');
+		//$('div[ng-controller="IncidentsFilterCtrl as f"] .filter-form').submit();
+	}
+);

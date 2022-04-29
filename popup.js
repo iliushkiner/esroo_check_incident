@@ -48,7 +48,7 @@ $(document).ready(function () {
 					let str_inc_date = "" + ((inc_date.getDate()) < 10 ? '0' : '') + inc_date.getDate() + '.' + ((inc_date.getMonth() + 1) < 10 ? '0' : '') + (inc_date.getMonth() + 1) + '.' + inc_date.getFullYear() + '  | ' + inc_date.getHours() + ':' + inc_date.getMinutes() + ':' + inc_date.getSeconds();
 					htm += '<div class="row" id="incidentnum-' + incident.number + '">';
 					htm += '<input type="checkbox" style="position: absolute; float: left; z-index: 9999;" data-inc="' + incident.number + '" name="inc_checkbox_' + incident.number + '">';
-					htm += '<div class="col-xs-10"><div class="col-xs-10"><a target="_blank" href="http://10.128.21.4/app/incidents/' + incident.number + '">' + incident.number + ' от ' + str_inc_date + '</a></div>';
+					htm += '<div class="col-xs-10"><div class="col-xs-10"><a target="_blank" href="http://10.128.21.4/app/incidents/' + incident.number + '" class="link_open_esroo" data-inc=\'' + incident.number + '\'>' + incident.number + ' от ' + str_inc_date + '</a>&nbsp;&nbsp;&nbsp;<input type="button" class="open_esroo" data-inc="' + incident.number + '" value="&#8634;"></div>';
 					let status = '';
 					switch (incident.status) {
 						case 0:
@@ -196,4 +196,24 @@ $(document).ready(function () {
 			// location.reload();
 		}
 	});
+
+	body.on('click', '.open_esroo', function () {
+		let incident = $(this).data('inc');
+		chrome.tabs.query({currentWindow: true, active: true}, function (tabs) {
+			var activeTab = tabs[0];
+			chrome.tabs.sendMessage(activeTab.id, {inc: incident}/*, function (response) {
+				console.log(response);
+			}*/);
+		});
+	});
+
+	/*body.on('dblclick', '.link_open_esroo', function () {
+		let incident = $(this).data('inc');
+		chrome.tabs.query({currentWindow: true, active: true}, function (tabs){
+			var activeTab = tabs[0];
+			chrome.runtime.sendMessage(activeTab.id, {inc: incident}, function (response) {
+				console.log(response);
+			});
+		});
+	});*/
 });
